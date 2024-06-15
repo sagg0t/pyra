@@ -1,0 +1,24 @@
+{
+  "name": "pyra",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "bun bun.config.js",
+    "build:css": "tailwindcss --postcss -i ./view/assets/css/main.css -o ./public/assets/pyra.css",
+    "build:css:mini": "bun run build:css --minify"
+  },
+  "devDependencies": {
+    "@tailwindcss/forms": "^0.5.7",
+    "@tailwindcss/typography": "^0.5.13",
+    "@types/bun": "latest",
+    "autoprefixer": "^10.4.19",
+    "postcss": "^8.4.38",
+    "postcss-flexbugs-fixes": "^5.0.2",
+    "postcss-import": "^16.1.0",
+    "postcss-nested": "^6.0.1",
+    "tailwindcss": "^3.4.4"
+  },
+  "peerDependencies": {
+    "typescript": "^5.0.0"
+  }
+}

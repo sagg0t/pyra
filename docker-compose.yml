@@ -1,0 +1,20 @@
+version: "3"
+
+services:
+  # web:
+  #   build: .
+  #   ports:
+  #     - 3000:3000
+  db:
+    image: postgres
+    ports:
+      - 5432:5432
+    environment:
+      POSTGRES_USER: pyra
+      POSTGRES_PASSWORD: pyra_pass
+      POSTGRES_DB: pyra_dev
+    volumes:
+      - pyra-db:/var/lib/postgresql/data
+
+volumes:
+  pyra-db:

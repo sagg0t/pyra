@@ -1,1 +1,1 @@
-DROP TABLE ingredients;
+DROP TABLE food_products;

@@ -2,9 +2,9 @@ package migrate
 
 import (
 	"context"
-	"database/sql"
 	"errors"
 	"fmt"
+	"log/slog"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -16,47 +16,79 @@ import (
 )
 
 var (
-	directions  = [2]string{"up", "down"}
-	formatRegex = regexp.MustCompile(`(\d{16})_(.+)\.(\w+)\.sql`)
-	errCreation = errors.New("failed to create a DB migration")
+	directions   = [2]string{"up", "down"}
+	formatRegex  = regexp.MustCompile(`(\d{16})_(.+)\.(\w+)\.sql`)
+	initTemplate = `
+	CREATE TABLE IF NOT EXISTS "%s" (
+		version VARCHAR(24) PRIMARY KEY,
+		created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+	);
+	`
 )
 
-type ErrPartialSuccess struct {
-	Message   string
-	Remaining Migrations
-}
-
-func (e ErrPartialSuccess) Error() string {
-	return e.Message
-}
-
 type Engine struct {
-	db  *pgx.Conn
-	dir string
+	db   *pgx.Conn
+	conf Config
+}
+
+func NewEngine(conf Config, dbConf DBConfig) (*Engine, error) {
+	dbConn, err := pgx.Connect(context.Background(), dbConf.String())
+	if err != nil {
+		return nil, err
+	}
+
+	eng := &Engine{
+		conf: conf,
+		db:   dbConn,
+	}
+
+	err = eng.init()
+	if err != nil {
+		return nil, err
+	}
+
+	return eng, nil
+}
+
+func (eng *Engine) init() error {
+	ctx := context.Background()
+	err := eng.db.Ping(ctx)
+	if err != nil {
+		return fmt.Errorf("DB ping failed - %w", err)
+	}
+	slog.Debug("DB ping successful")
+
+	_, err = eng.db.Exec(ctx, fmt.Sprintf(initTemplate, eng.conf.TableName))
+	if err != nil {
+		return fmt.Errorf("failed to create the control table:\n\t %w", err)
+	}
+	slog.Debug("control table initialisation success")
+
+	return nil
 }
 
 // Creates a migration file.
 // Returns a list of created file names
 func (eng *Engine) CreateMigration(name string) ([]string, error) {
 	version := strconv.FormatInt(time.Now().UnixMicro(), 10)
-	versionGlob := filepath.Join(eng.dir, version+"_*.sql")
+	versionGlob := filepath.Join(eng.conf.Dir, version+"_*.sql")
 	matches, err := filepath.Glob(versionGlob)
 	if err != nil {
-		return nil, errors.Join(errCreation, err)
+		return nil, err
 	}
 
 	if len(matches) > 0 {
-		return nil, errors.Join(errCreation, fmt.Errorf("duplicate migration version: %s", version), err)
+		return nil, fmt.Errorf("duplicate migration version: %s, %w", version, err)
 	}
 
-	if err = os.MkdirAll(eng.dir, os.ModePerm); err != nil {
-		return nil, errors.Join(errCreation, err)
+	if err = os.MkdirAll(eng.conf.Dir, os.ModePerm); err != nil {
+		return nil, err
 	}
 
 	createdFiles := []string{}
 	for _, direction := range directions {
 		baseName := fmt.Sprintf("%s_%s.%s.sql", version, name, direction)
-		fileName := filepath.Join(eng.dir, baseName)
+		fileName := filepath.Join(eng.conf.Dir, baseName)
 
 		f, err := os.Create(fileName)
 		if err != nil {
@@ -66,7 +98,7 @@ func (eng *Engine) CreateMigration(name string) ([]string, error) {
 				}
 			}
 
-			return nil, errors.Join(errCreation, err)
+			return nil, err
 		}
 		f.Close()
 
@@ -84,7 +116,7 @@ func (eng *Engine) CurrentVersion() (Migration, error) {
 
 	err := row.Scan(&m.Version, &m.AppliedAt)
 	if err != nil {
-		if err == sql.ErrNoRows {
+		if errors.Is(err, pgx.ErrNoRows) {
 			return Migration{Version: "0", AppliedAt: time.Time{}}, nil
 		}
 
@@ -96,7 +128,7 @@ func (eng *Engine) CurrentVersion() (Migration, error) {
 
 // Returns slice of migrations combining all local migrations as well as the migrations, that have been
 // previously applied, but which files are missing.
-func (eng *Engine) Status() (Migrations, error) {
+func (eng *Engine) Status() ([]Migration, error) {
 	localMigrations, err := eng.ScanDir()
 	if err != nil {
 		return nil, err
@@ -123,21 +155,21 @@ func (eng *Engine) Status() (Migrations, error) {
 			m := new(Migration)
 			*m = remoteMig
 
-			migrationHash[remoteMig.Version] = m
+			migrationHash[m.Version] = m
 		}
 	}
 
-	migrations := Migrations{}
+	migs := make([]Migration, 0)
 	for _, mig := range migrationHash {
-		migrations = append(migrations, *mig)
+		migs = append(migs, *mig)
 	}
 
-	sort.Sort(migrations)
+	sort.Sort(migrations(migs))
 
-	return migrations, nil
+	return migs, nil
 }
 
-func (eng *Engine) Up(count uint64) (appliedMigrations Migrations, outErr error) {
+func (eng *Engine) Apply(count uint64) (appliedMigrations []Migration, outErr error) {
 	pendingMigrations, err := eng.PendingMigrations()
 	if err != nil {
 		return nil, err
@@ -147,7 +179,7 @@ func (eng *Engine) Up(count uint64) (appliedMigrations Migrations, outErr error)
 		pendingMigrations = pendingMigrations[:count]
 	}
 
-	appliedMigrations = Migrations{}
+	appliedMigrations = make([]Migration, 0)
 	for _, mig := range pendingMigrations {
 		query, err := eng.readMigrationFile(mig.UpFile)
 		if err != nil {
@@ -155,7 +187,7 @@ func (eng *Engine) Up(count uint64) (appliedMigrations Migrations, outErr error)
 			break
 		}
 
-		err = eng.applyMigration(mig.Version, string(query), eng.onApplyMigration)
+		err = eng.applyMigration(fmt.Sprint(mig.Version), string(query), eng.onApplyMigration)
 		if err != nil {
 			outErr = err
 			break
@@ -165,15 +197,13 @@ func (eng *Engine) Up(count uint64) (appliedMigrations Migrations, outErr error)
 	}
 
 	if len(appliedMigrations) != 0 && len(appliedMigrations) != len(pendingMigrations) {
-		partialSuccessError := ErrPartialSuccess{Message: "some DB migrations failed to apply"}
-		partialSuccessError.Remaining = pendingMigrations[len(appliedMigrations):]
-		outErr = errors.Join(partialSuccessError, outErr)
+		outErr = fmt.Errorf("some DB migrations failed to apply - %w", outErr)
 	}
 
 	return appliedMigrations, outErr
 }
 
-func (eng *Engine) Down(count uint64) (rolledBack Migrations, outErr error) {
+func (eng *Engine) Rollback(count uint64) (rolledBack []Migration, outErr error) {
 	appliedVersions, err := eng.AppliedMigrations()
 	if err != nil {
 		return nil, err
@@ -183,9 +213,9 @@ func (eng *Engine) Down(count uint64) (rolledBack Migrations, outErr error) {
 		count = uint64(len(appliedVersions))
 	}
 
-	sort.Sort(sort.Reverse(appliedVersions))
+	sort.Sort(sort.Reverse(migrations(appliedVersions)))
 
-	rolledBack = Migrations{}
+	rolledBack = make([]Migration, 0, count)
 	for _, mig := range appliedVersions {
 		if count == 0 {
 			break
@@ -197,7 +227,7 @@ func (eng *Engine) Down(count uint64) (rolledBack Migrations, outErr error) {
 			break
 		}
 
-		err = eng.applyMigration(mig.Version, string(query), eng.onRollBackMigration)
+		err = eng.applyMigration(fmt.Sprint(mig.Version), string(query), eng.onRollBackMigration)
 		if err != nil {
 			outErr = err
 			break
@@ -208,9 +238,7 @@ func (eng *Engine) Down(count uint64) (rolledBack Migrations, outErr error) {
 	}
 
 	if count != 0 {
-		partialSuccessError := ErrPartialSuccess{Message: "some DB migrations failed to roll back"}
-		partialSuccessError.Remaining = appliedVersions[len(rolledBack):]
-		outErr = errors.Join(partialSuccessError, outErr)
+		outErr = fmt.Errorf("some DB migrations failed to apply - %w", outErr)
 	}
 
 	return rolledBack, outErr
@@ -218,8 +246,8 @@ func (eng *Engine) Down(count uint64) (rolledBack Migrations, outErr error) {
 
 // Intended for internal usage, but who knows...
 // Returns a slice of Migration's for each migration version present in the corresponding directory.
-func (eng *Engine) ScanDir() (Migrations, error) {
-	files, err := os.ReadDir(eng.dir)
+func (eng *Engine) ScanDir() ([]Migration, error) {
+	files, err := os.ReadDir(eng.conf.Dir)
 	if err != nil {
 		return nil, err
 	}
@@ -244,11 +272,11 @@ func (eng *Engine) ScanDir() (Migrations, error) {
 		case downDirection:
 			m.DownFile = file.Name()
 		default:
-			return nil, fmt.Errorf("invalid migration file format - direction is invalid, %s", file.Name())
+			return nil, fmt.Errorf("invalid migration file format - direction is invalid - %s", file.Name())
 		}
 	}
 
-	migrations := Migrations{}
+	migrations := make([]Migration, 0)
 	for _, m := range migrationHash {
 		migrations = append(migrations, *m)
 	}
@@ -257,7 +285,7 @@ func (eng *Engine) ScanDir() (Migrations, error) {
 }
 
 func (eng *Engine) readMigrationFile(filename string) ([]byte, error) {
-	filepath := filepath.Join(eng.dir, filename)
+	filepath := filepath.Join(eng.conf.Dir, filename)
 	query, err := os.ReadFile(filepath)
 	if err != nil {
 		return nil, err

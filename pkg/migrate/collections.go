@@ -2,12 +2,13 @@ package migrate
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"sort"
 )
 
 // Returns a slice of pending DB migrations, sorted from the oldest one to the most recent.
-func (eng *Engine) PendingMigrations() (Migrations, error) {
+func (eng *Engine) PendingMigrations() ([]Migration, error) {
 	currentVer, err := eng.CurrentVersion()
 	if err != nil {
 		return nil, err
@@ -18,19 +19,19 @@ func (eng *Engine) PendingMigrations() (Migrations, error) {
 		return nil, err
 	}
 
-	pendingMigrations := Migrations{}
+	pendingMigrations := make([]Migration, 0)
 	for _, mig := range localMigrations {
-		if mig.VersionUint() > currentVer.VersionUint() {
+		if mig.Version > currentVer.Version {
 			pendingMigrations = append(pendingMigrations, mig)
 		}
 	}
 
-	sort.Sort(pendingMigrations)
+	sort.Sort(migrations(pendingMigrations))
 
 	return pendingMigrations, nil
 }
 
-func (eng *Engine) AppliedMigrations() (Migrations, error) {
+func (eng *Engine) AppliedMigrations() ([]Migration, error) {
 	remoteMigrations, err := eng.remoteVersions()
 	if err != nil {
 		return nil, err
@@ -46,11 +47,11 @@ func (eng *Engine) AppliedMigrations() (Migrations, error) {
 		mp := new(Migration)
 		*mp = m
 
-		remoteMigHash[m.Version] = mp
+		remoteMigHash[fmt.Sprint(m.Version)] = mp
 	}
 
 	for _, m := range localMigrations {
-		remoteMig, ok := remoteMigHash[m.Version]
+		remoteMig, ok := remoteMigHash[fmt.Sprint(m.Version)]
 		if !ok {
 			continue
 		}
@@ -60,18 +61,18 @@ func (eng *Engine) AppliedMigrations() (Migrations, error) {
 		remoteMig.DownFile = m.DownFile
 	}
 
-	appliedMigrations := Migrations{}
+	appliedMigrations := make([]Migration, 0)
 	for _, m := range remoteMigHash {
 		appliedMigrations = append(appliedMigrations, *m)
 	}
 
-	sort.Sort(appliedMigrations)
+	sort.Sort(migrations(appliedMigrations))
 
 	return appliedMigrations, nil
 }
 
 // List of migration versions stored in the database.
-func (eng *Engine) remoteVersions() (Migrations, error) {
+func (eng *Engine) remoteVersions() ([]Migration, error) {
 	ctx := context.TODO()
 	rows, err := eng.db.Query(ctx, "SELECT * FROM schema_migrations;")
 	if err != nil {
@@ -79,7 +80,7 @@ func (eng *Engine) remoteVersions() (Migrations, error) {
 	}
 	defer rows.Close()
 
-	appliedMigrations := Migrations{}
+	appliedMigrations := make([]Migration, 0)
 	for rows.Next() {
 		m := Migration{}
 

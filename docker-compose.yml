@@ -11,7 +11,7 @@ services:
       - 5432:5432
     environment:
       POSTGRES_USER: pyra
-      POSTGRES_PASSWORD: pyra_pass
+      POSTGRES_PASSWORD: pyra
       POSTGRES_DB: pyra_dev
     volumes:
       - pyra-db:/var/lib/postgresql/data

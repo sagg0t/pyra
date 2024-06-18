@@ -22,8 +22,8 @@ type Config struct {
 
 	Scheme   string `env:"DB_SCHEME,default=postgresql"`
 	User     string `env:"DB_USER,default=pyra"`
-	Password string `env:"DB_PASSWORD,default=pyra_pass"`
-	DbName   string `env:"DB_NAME,default=pyra"`
+	Password string `env:"DB_PASSWORD,default=pyra"`
+	DbName   string `env:"DB_NAME,default=pyra_dev"`
 	Host     string `env:"DB_HOST,default=0.0.0.0"`
 	Port     uint   `env:"DB_PORT,default=5432"`
 
@@ -45,7 +45,10 @@ func (c Config) String() string {
 func NewConfig(adapter string) Config {
 	c := Config{Adapter: adapter, Attrs: url.Values{}}
 
-	envconfig.Process(context.TODO(), &c)
+	err := envconfig.Process(context.Background(), &c)
+	if err != nil {
+		panic(err)
+	}
 
 	return c
 }

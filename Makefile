@@ -14,7 +14,6 @@ pyra_build:
 .PHONY: pyra_build_dev
 pyra_build_dev:
 	@go build -tags dev -o ./tmp/bin/pyra ./cmd/pyra
-	@codesign -s - ./tmp/bin/pyra
 
 .PHONY: pyra
 pyra: pyra_build
@@ -45,6 +44,10 @@ migrate_version: migrate_build
 	@./bin/migrate version
 
 # END MIGRATE
+
+.PHONY: seed
+seed:
+	@go run ./database/seeds
 
 .PHONY: clean
 clean:

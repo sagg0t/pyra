@@ -4,7 +4,7 @@
   "type": "module",
   "scripts": {
     "build": "bun bun.config.js",
-    "build:css": "tailwindcss --postcss -i ./view/assets/css/main.css -o ./public/assets/pyra.css",
+    "build:css": "postcss ./view/assets/css/main.css -o ./public/assets/pyra.css",
     "build:css:mini": "bun run build:css --minify"
   },
   "devDependencies": {
@@ -13,6 +13,7 @@
     "@types/bun": "latest",
     "autoprefixer": "^10.4.19",
     "postcss": "^8.4.38",
+    "postcss-cli": "^11.0.0",
     "postcss-flexbugs-fixes": "^5.0.2",
     "postcss-import": "^16.1.0",
     "postcss-nested": "^6.0.1",

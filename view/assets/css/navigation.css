@@ -1,0 +1,16 @@
+.navigation-wrapper {
+    position: fixed;
+    left: 0;
+    top: 0;
+    height: 100vh;
+
+    @apply p-4;
+
+    nav {
+        ul {
+            li {
+                @apply p-2 bg-sky-200;
+            }
+        }
+    }
+}

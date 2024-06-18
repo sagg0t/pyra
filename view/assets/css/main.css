@@ -1,3 +1,6 @@
+/* @import must be first, even before @tailwind */
+@import "./navigation";
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;

@@ -1,34 +1,24 @@
 package layout
 
 templ Pyra() {
-    <!DOCTYPE html>
+	<!DOCTYPE html>
+	<html>
+		<head>
+			<title>Pyra</title>
+			<meta name="viewport" content="width=device-width,initial-scale=1">
+			<link rel="stylesheet" href="/assets/pyra.css">
+		</head>
 
-    <html>
-        <head>
-            <title>Pyra</title>
-            <meta name="viewport" content="width=device-width,initial-scale=1">
-        </head>
+		<body>
+			<main>
+				<div class="navigation-wrapper">
+					@Navigation()
+				</div>
 
-        <body>
-            <main>
-                <header class="w-full p-4 shadow-md shadow-gray-300">
-                    <nav class="flex flex-row-reverse mx-14">
-                        <ul class="flex flex-row gap-6">
-                            <li>
-                                <a href="#">Menu</a>
-                            </li>
-                            <li>
-                                <a href="#">Dishes</a>
-                            </li>
-                            <li>
-                                <a href="#" class="text_primary">Products</a>
-                            </li>
-                        </ul>
-                    </nav>
-                </header>
-
-                { children... }
-            </main>
-        </body>
-    </html>
+				<div style="left: 16.66vw">
+					{ children... }
+				</div>
+			</main>
+		</body>
+	</html>
 }

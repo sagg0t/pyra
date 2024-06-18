@@ -30,7 +30,7 @@ func New(opts ...ServerOption) (*Server, error) {
 		opt(s)
 	}
 
-	addr := fmt.Sprintf(":%d", s.port)
+	addr := fmt.Sprintf("localhost:%d", s.port)
 
 	listener, err := net.Listen("tcp", addr)
 	if err != nil {

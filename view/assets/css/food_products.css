@@ -1,0 +1,13 @@
+#product-list {
+    width: 100%;
+
+    td, th {
+        text-align: center;
+
+        @apply px-1 py-2;
+    }
+
+    td:first-child, th:first-child {
+        text-align: left;
+    }
+}

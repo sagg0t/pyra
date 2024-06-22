@@ -1,0 +1,48 @@
+package foodproducts
+
+import "github.com/olehvolynets/pyra/view/layout"
+import "github.com/olehvolynets/pyra/view/components"
+import "strconv"
+import fp "github.com/olehvolynets/pyra/internal/foodproducts"
+
+templ ProductList(products []fp.FoodProduct) {
+	@layout.Pyra() {
+		<main>
+			@components.Header() {
+				<h1>Products</h1>
+			}
+
+			<table id="product-list">
+				<thead>
+					<tr>
+						<th>Name</th>
+						<th>Calories</th>
+						<th>Proteins</th>
+						<th>Fats</th>
+						<th>Carbs</th>
+					</tr>
+				</thead>
+
+				<tbody>
+					for _, product := range products {
+						<tr>
+							<td>{product.Name}</td>
+							<td>{formatFloat(float64(product.Calories))}</td>
+							<td>{formatFloat(float64(product.Proteins))}</td>
+							<td>{formatFloat(float64(product.Fats))}</td>
+							<td>{formatFloat(float64(product.Carbs))}</td>
+						</tr>
+					}
+				</tbody>
+			</table>
+		</main>
+	}
+}
+
+func formatFloat(f float64) string {
+	if f - float64(int64(f)) == 0 {
+		return strconv.FormatInt(int64(f), 10)
+	} else {
+		return strconv.FormatFloat(f, 'f', -1, 32)
+	}
+}

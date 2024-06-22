@@ -1,4 +1,4 @@
-package foodproduct
+package foodproducts
 
 import (
 	"net/http"

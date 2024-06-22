@@ -3,15 +3,23 @@ package layout
 templ Navigation() {
 	<nav>
 		<ul>
-			<li>
-				<a href="#">Menu</a>
+			<li class={ templ.KV("active", false) }>
+				@navBtn("Menu", "#")
 			</li>
-			<li>
-				<a href="#">Dishes</a>
+
+			<li class={ templ.KV("active", true) }>
+				@navBtn("Products", "#")
 			</li>
-			<li>
-				<a href="#" class="text_primary">Products</a>
+
+			<li class={ templ.KV("active", false) }>
+				@navBtn("Dishes", "#")
 			</li>
 		</ul>
 	</nav>
+}
+
+templ navBtn(text, link string) {
+	<a href={ templ.URL(link) }>
+		{ text }
+	</a>
 }

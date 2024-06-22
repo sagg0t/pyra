@@ -1,0 +1,7 @@
+header#main-header {
+    @apply my-4;
+
+    h1 {
+        @apply text-xl font-semibold;
+    }
+}

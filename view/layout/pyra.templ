@@ -5,20 +5,22 @@ templ Pyra() {
 	<html>
 		<head>
 			<title>Pyra</title>
+
 			<meta name="viewport" content="width=device-width,initial-scale=1">
+
 			<link rel="stylesheet" href="/assets/pyra.css">
 		</head>
 
 		<body>
-			<main>
+			<div id="page-frame">
 				<div class="navigation-wrapper">
 					@Navigation()
 				</div>
 
-				<div style="left: 16.66vw">
+				<section id="main-content">
 					{ children... }
-				</div>
-			</main>
+				</section>
+			</div>
 		</body>
 	</html>
 }

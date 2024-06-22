@@ -9,7 +9,7 @@ import (
 	"os/signal"
 	"syscall"
 
-	foodproduct "github.com/olehvolynets/pyra/internal/api/food_product"
+	"github.com/olehvolynets/pyra/internal/api/foodproducts"
 	"github.com/olehvolynets/pyra/internal/server"
 )
 
@@ -39,7 +39,7 @@ func main() {
 	}
 
 	mux := http.NewServeMux()
-	mux.Handle("/foodProducts", foodproduct.ServerMux())
+	mux.Handle("/foodProducts", foodproducts.ServerMux())
 
 	staticFs := http.FileServerFS(os.DirFS("./public/assets"))
 	mux.Handle("/assets/", http.StripPrefix("/assets/", staticFs))

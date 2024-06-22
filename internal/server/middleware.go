@@ -26,12 +26,9 @@ func (c *responseStatusCatcher) WriteHeader(statusCode int) {
 }
 
 func (c *responseStatusCatcher) StatusCode() int {
-	fmt.Println("returning a status")
 	if c.statusCode == 0 {
-		fmt.Println("status 0")
 		return http.StatusOK
 	}
-	fmt.Println("status not 0")
 
 	return c.statusCode
 }
@@ -48,7 +45,7 @@ func Logger(f http.Handler) http.Handler {
 		took := endT.Sub(startT).Seconds()
 
 		slog.Info("req",
-			"status", ww.statusCode,
+			"status", ww.StatusCode(),
 			"method", r.Method,
 			"path", r.URL.Path,
 			"took", fmt.Sprintf("%.6f", took))

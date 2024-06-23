@@ -1,0 +1,104 @@
+package foodproducts
+
+import "github.com/olehvolynets/pyra/view/layout"
+import "github.com/olehvolynets/pyra/view/components"
+import "github.com/olehvolynets/pyra/view/utils"
+import "github.com/olehvolynets/pyra/pkg/foodproducts"
+
+templ NewProduct() {
+	@layout.Pyra() {
+		@components.Header() {
+			<div class="flex justify-between w-full">
+				<h1>Add a Product</h1>
+				<a href="/foodProducts" class="link-primary">
+					List
+				</a>
+			</div>
+		}
+		<section>
+			@newProductForm(foodproducts.FoodProduct{})
+		</section>
+	}
+}
+
+templ newProductForm(product foodproducts.FoodProduct) {
+	<form action="/foodProducts" method="POST">
+		<div class="flex flex-col items-start gap-4">
+			@formRow("name", "Name") {
+				<input
+					type="text"
+					value={ product.Name }
+					name="name"
+					id="name"
+					required
+				/>
+			}
+			<div class="flex gap-2">
+				@formRow("calories", "Calories") {
+					<input
+						type="number"
+						value={ utils.FormatFloat(product.Calories) }
+						name="calories"
+						id="calories"
+						placeholder="0"
+						required
+					/>
+				}
+				@formRow("per", "Per") {
+					<input
+						type="number"
+						value={ utils.FormatFloat(product.Calories) }
+						name="per"
+						id="per"
+						placeholder="100"
+						required
+					/>
+				}
+			</div>
+			<div class="macros flex gap-2">
+				@formRow("proteins", "Proteins") {
+					<input
+						type="number"
+						value={ utils.FormatFloat(product.Calories) }
+						name="proteins"
+						id="proteins"
+						placeholder="0"
+						required
+					/>
+				}
+				@formRow("fats", "Fats") {
+					<input
+						type="number"
+						value={ utils.FormatFloat(product.Fats) }
+						name="fats"
+						id="fats"
+						placeholder="0"
+						required
+					/>
+				}
+				@formRow("carbs", "Carbs") {
+					<input
+						type="number"
+						value={ utils.FormatFloat(product.Carbs) }
+						name="carbs"
+						id="carbs"
+						placeholder="0"
+						required
+					/>
+				}
+			</div>
+			<button type="submit" class="btn-secondary">
+				Submit
+			</button>
+		</div>
+	</form>
+}
+
+templ formRow(name, label string) {
+	<div class="form-control">
+		<label for={ name }>{ label }</label>
+		<div>
+			{ children... }
+		</div>
+	</div>
+}

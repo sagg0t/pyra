@@ -1,0 +1,49 @@
+package foodproducts
+
+import fp "github.com/olehvolynets/pyra/pkg/foodproducts"
+import "github.com/olehvolynets/pyra/view/layout"
+import "github.com/olehvolynets/pyra/view/components"
+import "github.com/olehvolynets/pyra/view/utils"
+
+templ ProductDetails(product fp.FoodProduct) {
+	@layout.Pyra() {
+		@components.Header() {
+			<div class="flex justify-between w-full">
+				<h1>{ product.Name }</h1>
+				<a href="/foodProducts" class="link-primary">
+					List
+				</a>
+			</div>
+		}
+
+		<section id="product-details" class="mb-8">
+			<table>
+				<tbody>
+					<tr>
+						<td>Calories</td>
+						<td>{ utils.FormatFloat(product.Calories) }</td>
+					</tr>
+
+					<tr>
+						<td>Proteins</td>
+						<td>{ utils.FormatFloat(product.Proteins) }</td>
+					</tr>
+
+					<tr>
+						<td>Fats</td>
+						<td>{ utils.FormatFloat(product.Fats) }</td>
+					</tr>
+
+					<tr>
+						<td>Carbs</td>
+						<td>{ utils.FormatFloat(product.Carbs) }</td>
+					</tr>
+				</tbody>
+			</table>
+		</section>
+
+		<section>
+			<h3 class="section-header">Product references...</h3>
+		</section>
+	}
+}

@@ -4,22 +4,16 @@ templ Navigation() {
 	<nav>
 		<ul>
 			<li class={ templ.KV("active", false) }>
-				@navBtn("Menu", "#")
+				<a href="#">Menu</a>
 			</li>
 
 			<li class={ templ.KV("active", true) }>
-				@navBtn("Products", "#")
+				<a href="/foodProducts">Products</a>
 			</li>
 
 			<li class={ templ.KV("active", false) }>
-				@navBtn("Dishes", "#")
+				<a href="#">Dishes</a>
 			</li>
 		</ul>
 	</nav>
-}
-
-templ navBtn(text, link string) {
-	<a href={ templ.URL(link) }>
-		{ text }
-	</a>
 }

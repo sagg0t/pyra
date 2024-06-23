@@ -11,3 +11,15 @@
         text-align: left;
     }
 }
+
+#product-details {
+    table {
+        td {
+            @apply p-2 text-lg;
+
+            &:first-child {
+                @apply font-bold;
+            }
+        }
+    }
+}

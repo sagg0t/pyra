@@ -15,6 +15,10 @@ const (
 	LevelError Level = Level(slog.LevelError) // 8
 )
 
+func init() {
+	slog.SetLogLoggerLevel(slog.Level(LevelTrace))
+}
+
 type Logger struct {
 	slogger *slog.Logger
 }
@@ -36,6 +40,14 @@ func (l *Logger) Debug(msg string, args ...any) {
 
 func (l *Logger) DebugContext(ctx context.Context, msg string, args ...any) {
 	l.slogger.DebugContext(ctx, msg, args...)
+}
+
+func (l *Logger) Trace(msg string, args ...any) {
+	l.slogger.Log(context.Background(), slog.Level(LevelTrace), msg, args...)
+}
+
+func (l *Logger) TraceContext(ctx context.Context, msg string, args ...any) {
+	l.slogger.Log(ctx, slog.Level(LevelTrace), msg, args...)
 }
 
 func (l *Logger) Error(msg string, args ...any) {

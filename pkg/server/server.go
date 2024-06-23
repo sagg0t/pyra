@@ -10,7 +10,7 @@ import (
 	"net/http"
 	"time"
 
-	pyralog "github.com/olehvolynets/pyra/internal/log"
+	pyralog "github.com/olehvolynets/pyra/pkg/log"
 )
 
 type Server struct {

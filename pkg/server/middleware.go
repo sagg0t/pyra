@@ -1,7 +1,6 @@
 package server
 
 import (
-	"fmt"
 	"log/slog"
 	"net/http"
 	"time"
@@ -42,12 +41,12 @@ func Logger(f http.Handler) http.Handler {
 		f.ServeHTTP(&ww, r)
 
 		endT := time.Now()
-		took := endT.Sub(startT).Seconds()
+		took := endT.Sub(startT)
 
 		slog.Info("req",
 			"status", ww.StatusCode(),
 			"method", r.Method,
 			"path", r.URL.Path,
-			"took", fmt.Sprintf("%.6f", took))
+			"took", took)
 	})
 }

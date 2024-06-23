@@ -1,9 +1,10 @@
 package server
 
 import (
-	"log/slog"
 	"net/http"
 	"time"
+
+	"github.com/olehvolynets/pyra/pkg/log"
 )
 
 type responseStatusCatcher struct {
@@ -32,7 +33,7 @@ func (c *responseStatusCatcher) StatusCode() int {
 	return c.statusCode
 }
 
-func Logger(f http.Handler) http.Handler {
+func Logger(logger *log.Logger, f http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		startT := time.Now()
 		// slog.Info("started", "method", r.Method, "path", r.URL.Path)
@@ -43,7 +44,7 @@ func Logger(f http.Handler) http.Handler {
 		endT := time.Now()
 		took := endT.Sub(startT)
 
-		slog.Info("req",
+		logger.Info("req",
 			"status", ww.StatusCode(),
 			"method", r.Method,
 			"path", r.URL.Path,

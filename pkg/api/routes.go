@@ -7,19 +7,20 @@ import (
 
 	foodProductsAPI "github.com/olehvolynets/pyra/pkg/api/foodproducts"
 	"github.com/olehvolynets/pyra/pkg/foodproducts"
+	"github.com/olehvolynets/pyra/pkg/log"
 )
 
-func Routes(db *pgxpool.Pool) *http.ServeMux {
+func Routes(db *pgxpool.Pool, logger *log.Logger) *http.ServeMux {
 	mux := http.NewServeMux()
 
-	foodProductsRoutes(mux, db)
+	foodProductsRoutes(mux, db, logger)
 
 	return mux
 }
 
-func foodProductsRoutes(mux *http.ServeMux, db *pgxpool.Pool) {
+func foodProductsRoutes(mux *http.ServeMux, db *pgxpool.Pool, logger *log.Logger) {
 	service := foodproducts.NewService(db)
-	api := foodProductsAPI.NewAPI(service)
+	api := foodProductsAPI.NewAPI(logger, service)
 
 	mux.HandleFunc("GET /foodProducts", api.List)
 	mux.HandleFunc("GET /foodProducts/{id}", api.Show)

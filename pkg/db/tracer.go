@@ -2,10 +2,11 @@ package db
 
 import (
 	"context"
-	"log/slog"
 	"time"
 
 	"github.com/jackc/pgx/v5"
+
+	"github.com/olehvolynets/pyra/pkg/log"
 )
 
 type traceCtxKey int
@@ -15,10 +16,10 @@ const (
 )
 
 type QueryTracer struct {
-	log *slog.Logger
+	log *log.Logger
 }
 
-func NewQueryTracer(l *slog.Logger) *QueryTracer {
+func NewQueryTracer(l *log.Logger) *QueryTracer {
 	return &QueryTracer{log: l}
 }
 

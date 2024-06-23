@@ -2,7 +2,6 @@ package foodproducts
 
 import (
 	"encoding/json"
-	"log/slog"
 	"net/http"
 	"strconv"
 )
@@ -10,14 +9,14 @@ import (
 func (api *API) Create(w http.ResponseWriter, r *http.Request) {
 	err := r.ParseForm()
 	if err != nil {
-		slog.Error("failed to parse form", "error", err)
+		api.log.Error("failed to parse form", "error", err)
 		w.WriteHeader(http.StatusUnprocessableEntity)
 		return
 	}
 
 	reqData, err := paramsFromForm(r.FormValue)
 	if err != nil {
-		slog.Error("failed to map form data", "error", err)
+		api.log.Error("failed to map form data", "error", err)
 		w.WriteHeader(http.StatusUnprocessableEntity)
 		return
 	}

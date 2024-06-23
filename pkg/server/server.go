@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"log"
-	"log/slog"
 	"net"
 	"net/http"
 	"time"
@@ -17,14 +16,14 @@ type Server struct {
 	ip       string
 	port     uint
 	listener net.Listener
-	log      *slog.Logger
+	log      *pyralog.Logger
 }
 
 type ServerOption func(*Server)
 
 func New(opts ...ServerOption) (*Server, error) {
 	// FIX: craete a real error logger
-	s := &Server{port: 3000, log: slog.Default()}
+	s := &Server{port: 3000, log: pyralog.NewLogger()}
 
 	for _, opt := range opts {
 		opt(s)
@@ -49,7 +48,7 @@ func WithPort(port uint) ServerOption {
 	}
 }
 
-func WithLogger(l *slog.Logger) ServerOption {
+func WithLogger(l *pyralog.Logger) ServerOption {
 	return func(s *Server) {
 		s.log = l
 	}

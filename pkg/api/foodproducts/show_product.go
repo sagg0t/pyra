@@ -2,7 +2,6 @@ package foodproducts
 
 import (
 	"errors"
-	"log/slog"
 	"net/http"
 	"strconv"
 
@@ -26,12 +25,12 @@ func (api *API) Show(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		slog.Error("failed to retrieve a record", "error", err)
+		api.log.Error("failed to retrieve a record", "error", err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
 	if err := view.ProductDetails(product).Render(r.Context(), w); err != nil {
-		slog.Warn(err.Error())
+		api.log.Warn(err.Error())
 	}
 }

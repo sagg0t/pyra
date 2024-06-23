@@ -11,8 +11,8 @@ import (
 
 	"github.com/jackc/pgx/v5"
 
-	"github.com/olehvolynets/pyra/internal/db"
-	foodproduct "github.com/olehvolynets/pyra/internal/food_product"
+	"github.com/olehvolynets/pyra/pkg/db"
+	"github.com/olehvolynets/pyra/pkg/foodproducts"
 )
 
 func main() {
@@ -38,7 +38,7 @@ func seedFoodProducts(conn *pgx.Conn) error {
 	r := csv.NewReader(f)
 	r.Comma = ';'
 
-	foodProducts := make([]foodproduct.FoodProduct, 0)
+	foodProducts := make([]foodproducts.FoodProduct, 0)
 
 	for {
 		csvRecord, err := r.Read()
@@ -72,7 +72,7 @@ func seedFoodProducts(conn *pgx.Conn) error {
 			continue
 		}
 
-		record := foodproduct.FoodProduct{
+		record := foodproducts.FoodProduct{
 			Name:      csvRecord[0],
 			Calories:  float32(calories),
 			Proteins:  float32(proteins),

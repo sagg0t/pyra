@@ -1,44 +1,54 @@
 package foodproducts
 
 import (
-	"encoding/json"
+	"fmt"
 	"net/http"
 	"strconv"
+
+	"github.com/olehvolynets/pyra/pkg/foodproducts"
 )
 
 func (api *API) Create(w http.ResponseWriter, r *http.Request) {
 	err := r.ParseForm()
 	if err != nil {
-		api.log.Error("failed to parse form", "error", err)
+		api.log.Trace("failed to parse form", "error", err)
 		w.WriteHeader(http.StatusUnprocessableEntity)
 		return
 	}
 
 	reqData, err := paramsFromForm(r.FormValue)
 	if err != nil {
-		api.log.Error("failed to map form data", "error", err)
+		api.log.Trace("failed to map form data", "error", err)
 		w.WriteHeader(http.StatusUnprocessableEntity)
 		return
 	}
 
-	bytes, _ := json.MarshalIndent(reqData, "", "	")
-	w.Write(bytes)
-	w.WriteHeader(http.StatusCreated)
+	validator := foodproducts.NewCreateValidator(reqData)
+	validator.Validate()
+	if err = validator.Err(); err != nil {
+		api.log.Trace("validation error", "error", err)
+
+		w.WriteHeader(http.StatusUnprocessableEntity)
+		fmt.Fprint(w, err)
+		return
+	}
+
+	newProductID, err := api.svc.Create(r.Context(), reqData)
+	if err != nil {
+		api.log.Trace("validation error", "error", err)
+
+		w.WriteHeader(http.StatusUnprocessableEntity)
+		fmt.Fprint(w, err)
+		return
+	}
+
+	http.Redirect(w, r,
+		fmt.Sprintf("/foodProducts/%d", newProductID),
+		http.StatusMovedPermanently)
 }
 
-type CreateRequest struct {
-	Name string
-
-	Calories float32
-	Per      uint32
-
-	Proteins float32
-	Fats     float32
-	Carbs    float32
-}
-
-func paramsFromForm(fetch func(key string) string) (CreateRequest, error) {
-	reqData := CreateRequest{
+func paramsFromForm(fetch func(key string) string) (foodproducts.Params, error) {
+	reqData := foodproducts.Params{
 		Name: fetch("name"),
 	}
 

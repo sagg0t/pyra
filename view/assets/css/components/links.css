@@ -1,3 +1,11 @@
 .link-primary {
+    cursor: pointer;
+
     @apply text-emerald-500 font-semibold;
+}
+
+.link-secondary {
+    cursor: pointer;
+
+    @apply text-yellow-200 font-normal;
 }

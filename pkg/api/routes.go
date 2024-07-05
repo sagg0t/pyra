@@ -19,11 +19,12 @@ func Routes(db *pgxpool.Pool, logger *log.Logger) *http.ServeMux {
 }
 
 func foodProductsRoutes(mux *http.ServeMux, db *pgxpool.Pool, logger *log.Logger) {
-	service := foodproducts.NewService(db)
+	service := foodproducts.NewDB(db)
 	api := foodProductsAPI.NewAPI(logger, service)
 
 	mux.HandleFunc("GET /foodProducts", api.List)
 	mux.HandleFunc("GET /foodProducts/{id}", api.Show)
 	mux.HandleFunc("GET /foodProducts/new", api.New)
 	mux.HandleFunc("POST /foodProducts", api.Create)
+	mux.HandleFunc("DELETE /foodProducts/{id}", api.Delete)
 }

@@ -28,24 +28,47 @@ templ ProductList(products []fp.FoodProduct) {
 					<th>Proteins</th>
 					<th>Fats</th>
 					<th>Carbs</th>
+					<th></th>
 				</tr>
 			</thead>
 
-			<tbody>
+			<tbody hx-confirm="Are you sure?" hx-target="closest tr" hx-swap="outerHTML">
 				for _, product := range products {
 					<tr>
 						<td>
-							<a href={ templ.URL(fmt.Sprintf("/foodProducts/%d", product.ID)) } class="link-primary">
+							<a href={ productPath(product.ID) } class="link-primary">
 								{ product.Name }
 							</a>
 						</td>
-						<td>{utils.FormatFloat(product.Calories)}</td>
-						<td>{utils.FormatFloat(product.Proteins)}</td>
-						<td>{utils.FormatFloat(product.Fats)}</td>
-						<td>{utils.FormatFloat(product.Carbs)}</td>
+						<td>{ utils.FormatFloat(product.Calories) }</td>
+						<td>{ utils.FormatFloat(product.Proteins) }</td>
+						<td>{ utils.FormatFloat(product.Fats) }</td>
+						<td>{ utils.FormatFloat(product.Carbs) }</td>
+						<td>
+							<ul class="actions">
+								<li>
+									<a href={ editProductPath(product.ID) } class="link-secondary">
+										Edit
+									</a>
+								</li>
+								<li>
+									<span hx-delete={ string(productPath(product.ID)) } class="link-secondary">
+										Delete
+									</span>
+								</li>
+							</ul>
+						</td>
 					</tr>
 				}
 			</tbody>
 		</table>
 	}
+}
+
+func productPath(id uint64) templ.SafeURL {
+	return templ.URL(fmt.Sprintf("/foodProducts/%d", id))
+}
+
+func editProductPath(id uint64) templ.SafeURL {
+	return templ.URL(fmt.Sprintf("/foodProducts/%d/edit", id))
 }

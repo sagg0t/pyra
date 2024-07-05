@@ -5,6 +5,10 @@
         text-align: center;
 
         @apply px-1 py-2;
+
+        .actions {
+            @apply flex gap-3;
+        }
     }
 
     td:first-child, th:first-child {

@@ -1,1 +1,1 @@
-DROP TABLE food_products;
+DROP TABLE IF EXISTS food_products;

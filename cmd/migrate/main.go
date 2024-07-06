@@ -37,7 +37,7 @@ func main() {
 	case "apply":
 		var count uint64 = 0
 		if len(os.Args) > 2 {
-			argCount, err := parseCount(os.Args[3])
+			argCount, err := parseCount(os.Args[2])
 			if err != nil {
 				commandError = err
 				break

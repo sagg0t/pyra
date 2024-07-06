@@ -63,6 +63,8 @@ func main() {
 	case "status":
 	case "version":
 		commandError = migrationVersion(engine)
+	case "help":
+		commandError = showHelp()
 	default:
 		commandError = fmt.Errorf("unknown command %q", command)
 	}
@@ -147,4 +149,17 @@ func parseCount(sCount string) (uint64, error) {
 	}
 
 	return count, nil
+}
+
+var helpMsg = "Migrate:\n" +
+	"\tadd NAME\tcreate migration files with the given NAME\n" +
+	"\tapply [N]\tapply N migrations, defaults to 0 (all pending migrations)\n" +
+	"\trollback [N]\trollback N migrations, defaults to 1\n" +
+	"\tstatus\t\tshow migration status\n" +
+	"\tversion\t\tshow last applied migration version\n" +
+	"\thelp\t\tshow this message\n"
+
+func showHelp() error {
+	fmt.Print(helpMsg)
+	return nil
 }

@@ -1,0 +1,9 @@
+package auth
+
+import "github.com/olehvolynets/pyra/view/layout"
+
+templ SignIn() {
+	@layout.Auth() {
+		<a href="/auth/google" class="btn-primary">Google</a>
+	}
+}

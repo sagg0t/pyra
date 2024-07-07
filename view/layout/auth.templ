@@ -1,6 +1,6 @@
 package layout
 
-templ Pyra() {
+templ Auth() {
 	<!DOCTYPE html>
 	<html>
 		<head>
@@ -13,18 +13,9 @@ templ Pyra() {
 		</head>
 
 		<body>
-			<div id="page-frame">
-				<div class="navigation-wrapper">
-					@Navigation()
-				</div>
-
-				<div class="mt-8">
-					<a href="/auth/google" class="p-3">Google</a>
-				</div>
-				<main id="main-content">
-					{ children... }
-				</main>
-			</div>
+			<main id="main-content">
+				{ children... }
+			</main>
 		</body>
 	</html>
 }

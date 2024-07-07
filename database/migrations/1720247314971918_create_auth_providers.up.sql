@@ -2,7 +2,7 @@ CREATE TABLE IF NOT EXISTS auth_providers
 (
     id          BIGSERIAL       PRIMARY KEY,
 
-    user_id     BIGSERIAL       REFERENCES users(id),
+    user_id     BIGINT          REFERENCES users,
 
     name        VARCHAR(64)     NOT NULL,
     uid         VARCHAR(64)     NOT NULL,

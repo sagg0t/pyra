@@ -2,6 +2,7 @@ package log
 
 import (
 	"context"
+	"encoding/json"
 	"log/slog"
 )
 
@@ -16,7 +17,7 @@ const (
 )
 
 func init() {
-	slog.SetLogLoggerLevel(slog.Level(LevelTrace))
+	slog.SetLogLoggerLevel(slog.Level(LevelDebug))
 }
 
 type Logger struct {
@@ -72,6 +73,20 @@ func (l *Logger) Warn(msg string, args ...any) {
 
 func (l *Logger) WarnContext(ctx context.Context, msg string, args ...any) {
 	l.slogger.WarnContext(ctx, msg, args...)
+}
+
+func (l *Logger) Inspect(v any) {
+	l.InspectContext(context.Background(), v)
+}
+
+func (l *Logger) InspectContext(ctx context.Context, v any) {
+	prettyValue, err := json.MarshalIndent(v, "", "	")
+	if err != nil {
+		l.ErrorContext(ctx, "failed to marshal value for inspection", "error", err)
+		return
+	}
+
+	l.DebugContext(ctx, string(prettyValue))
 }
 
 func (l *Logger) LogAttrs(ctx context.Context, level Level, msg string, attrs ...slog.Attr) {

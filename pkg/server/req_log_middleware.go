@@ -4,25 +4,19 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/google/uuid"
+
 	"github.com/olehvolynets/pyra/pkg/log"
 )
 
 type responseStatusCatcher struct {
-	w          http.ResponseWriter
+	http.ResponseWriter
 	statusCode int
-}
-
-func (c *responseStatusCatcher) Header() http.Header {
-	return c.w.Header()
-}
-
-func (c *responseStatusCatcher) Write(b []byte) (int, error) {
-	return c.w.Write(b)
 }
 
 func (c *responseStatusCatcher) WriteHeader(statusCode int) {
 	c.statusCode = statusCode
-	c.w.WriteHeader(statusCode)
+	c.ResponseWriter.WriteHeader(statusCode)
 }
 
 func (c *responseStatusCatcher) StatusCode() int {
@@ -36,18 +30,25 @@ func (c *responseStatusCatcher) StatusCode() int {
 func Logger(logger *log.Logger, f http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		startT := time.Now()
-		// slog.Info("started", "method", r.Method, "path", r.URL.Path)
 
-		ww := responseStatusCatcher{w: w}
+		traceId := uuid.New()
+		l := logger.With("traceId", traceId.String())
+
+		ctxWithLog := log.CtxWithLogger(r.Context(), l)
+		r = r.WithContext(ctxWithLog)
+
+		ww := responseStatusCatcher{ResponseWriter: w}
 		f.ServeHTTP(&ww, r)
 
 		endT := time.Now()
 		took := endT.Sub(startT)
 
-		logger.Info("req",
+		l.Info("req",
 			"status", ww.StatusCode(),
 			"method", r.Method,
 			"path", r.URL.Path,
-			"took", took)
+			"took", took,
+			"location", ww.Header().Get("Location"),
+		)
 	})
 }

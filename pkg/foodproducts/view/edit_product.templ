@@ -1,0 +1,21 @@
+package view
+
+import "pyra/view/layout"
+import "pyra/view/components"
+import "pyra/pkg/foodproducts"
+
+templ EditProduct(form foodproducts.CreateResponse) {
+	@layout.Pyra() {
+		@components.Header() {
+			<div class="flex justify-between w-full">
+				<h1>Edit: { form.Name }</h1>
+				<a href="/foodProducts" class="link-primary">
+					List
+				</a>
+			</div>
+		}
+		<section>
+			@newProductForm(form)
+		</section>
+	}
+}

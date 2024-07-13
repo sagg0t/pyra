@@ -5,12 +5,12 @@ import (
 
 	"github.com/jackc/pgx/v5/pgxpool"
 
-	authAPI "github.com/olehvolynets/pyra/pkg/api/auth"
-	foodProductsAPI "github.com/olehvolynets/pyra/pkg/api/foodproducts"
-	"github.com/olehvolynets/pyra/pkg/auth"
-	"github.com/olehvolynets/pyra/pkg/foodproducts"
-	"github.com/olehvolynets/pyra/pkg/log"
-	"github.com/olehvolynets/pyra/pkg/users"
+	authAPI "pyra/pkg/api/auth"
+	foodProductsAPI "pyra/pkg/api/foodproducts"
+	"pyra/pkg/auth"
+	"pyra/pkg/foodproducts"
+	"pyra/pkg/log"
+	"pyra/pkg/users"
 )
 
 func Routes(db *pgxpool.Pool, logger *log.Logger) *http.ServeMux {
@@ -24,7 +24,11 @@ func Routes(db *pgxpool.Pool, logger *log.Logger) *http.ServeMux {
 }
 
 func rootHandler(w http.ResponseWriter, r *http.Request) {
-	http.Redirect(w, r, "/signIn", http.StatusTemporaryRedirect)
+	if auth.IsAuthenticated(r) {
+		http.Redirect(w, r, "/foodProducts", http.StatusSeeOther)
+	} else {
+		http.Redirect(w, r, "/signIn", http.StatusTemporaryRedirect)
+	}
 }
 
 func authRoutes(mux *http.ServeMux, db *pgxpool.Pool, logger *log.Logger) {
@@ -35,18 +39,18 @@ func authRoutes(mux *http.ServeMux, db *pgxpool.Pool, logger *log.Logger) {
 
 	api := authAPI.NewAPI(logger, authSvc)
 
-	mux.HandleFunc("GET /signIn", api.SignIn)
-	mux.HandleFunc("GET /auth/google", api.GoogleAuth)
-	mux.HandleFunc("GET /auth/google/callback", api.GoogleCallback)
+	mux.Handle("GET /signIn", auth.NotAuthenticated(api.SignIn))
+	mux.Handle("GET /auth/google", auth.NotAuthenticated(api.GoogleAuth))
+	mux.Handle("GET /auth/google/callback", auth.NotAuthenticated(api.GoogleCallback))
 }
 
 func foodProductsRoutes(mux *http.ServeMux, db *pgxpool.Pool, logger *log.Logger) {
 	service := foodproducts.NewDB(db)
 	api := foodProductsAPI.NewAPI(logger, service)
 
-	mux.HandleFunc("GET /foodProducts", api.List)
-	mux.HandleFunc("GET /foodProducts/{id}", api.Show)
-	mux.HandleFunc("GET /foodProducts/new", api.New)
-	mux.HandleFunc("POST /foodProducts", api.Create)
-	mux.HandleFunc("DELETE /foodProducts/{id}", api.Delete)
+	mux.Handle("GET /foodProducts", auth.Authenticated(api.List))
+	mux.Handle("GET /foodProducts/{id}", auth.Authenticated(api.Show))
+	mux.Handle("GET /foodProducts/new", auth.Authenticated(api.New))
+	mux.Handle("POST /foodProducts", auth.Authenticated(api.Create))
+	mux.Handle("DELETE /foodProducts/{id}", auth.Authenticated(api.Delete))
 }

@@ -6,7 +6,7 @@ import (
 
 	"github.com/jackc/pgx/v5"
 
-	"github.com/olehvolynets/pyra/pkg/log"
+	"pyra/pkg/log"
 )
 
 type traceCtxKey int

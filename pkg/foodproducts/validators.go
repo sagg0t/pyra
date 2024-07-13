@@ -14,11 +14,11 @@ var (
 )
 
 type validator struct {
-	params Params
+	params Form
 	err    error
 }
 
-func NewCreateValidator(params Params) Validator {
+func NewCreateValidator(params Form) Validator {
 	return &validator{
 		params: params,
 		err:    nil,

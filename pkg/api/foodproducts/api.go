@@ -4,8 +4,8 @@ import (
 	"net/http"
 	"strconv"
 
-	fp "github.com/olehvolynets/pyra/pkg/foodproducts"
-	"github.com/olehvolynets/pyra/pkg/log"
+	fp "pyra/pkg/foodproducts"
+	"pyra/pkg/log"
 )
 
 type API struct {

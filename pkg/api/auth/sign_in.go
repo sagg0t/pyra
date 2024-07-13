@@ -3,7 +3,7 @@ package auth
 import (
 	"net/http"
 
-	view "github.com/olehvolynets/pyra/view/auth"
+	view "pyra/view/auth"
 )
 
 func (api *API) SignIn(w http.ResponseWriter, r *http.Request) {

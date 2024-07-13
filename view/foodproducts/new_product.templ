@@ -1,11 +1,10 @@
 package foodproducts
 
-import "github.com/olehvolynets/pyra/view/layout"
-import "github.com/olehvolynets/pyra/view/components"
-import "github.com/olehvolynets/pyra/view/utils"
-import "github.com/olehvolynets/pyra/pkg/foodproducts"
+import "pyra/view/layout"
+import "pyra/view/components"
+import "pyra/pkg/foodproducts"
 
-templ NewProduct() {
+templ NewProduct(form foodproducts.Form) {
 	@layout.Pyra() {
 		@components.Header() {
 			<div class="flex justify-between w-full">
@@ -16,18 +15,18 @@ templ NewProduct() {
 			</div>
 		}
 		<section>
-			@newProductForm(foodproducts.FoodProduct{})
+			@newProductForm(form)
 		</section>
 	}
 }
 
-templ newProductForm(product foodproducts.FoodProduct) {
+templ newProductForm(form foodproducts.Form) {
 	<form action="/foodProducts" method="POST">
 		<div class="flex flex-col items-start gap-4">
 			@formRow("name", "Name") {
 				<input
 					type="text"
-					value={ product.Name }
+					value={ form.Name }
 					name="name"
 					id="name"
 					required
@@ -37,7 +36,7 @@ templ newProductForm(product foodproducts.FoodProduct) {
 				@formRow("calories", "Calories") {
 					<input
 						type="number"
-						value={ utils.FormatFloat(product.Calories) }
+						value={ formatFloat(float64(form.Calories)) }
 						name="calories"
 						id="calories"
 						placeholder="0"
@@ -47,7 +46,7 @@ templ newProductForm(product foodproducts.FoodProduct) {
 				@formRow("per", "Per") {
 					<input
 						type="number"
-						value={ utils.FormatFloat(product.Calories) }
+						value={ formatFloat(float64(form.Per)) }
 						name="per"
 						id="per"
 						placeholder="100"
@@ -59,7 +58,7 @@ templ newProductForm(product foodproducts.FoodProduct) {
 				@formRow("proteins", "Proteins") {
 					<input
 						type="number"
-						value={ utils.FormatFloat(product.Calories) }
+						value={ formatFloat(float64(form.Proteins)) }
 						name="proteins"
 						id="proteins"
 						placeholder="0"
@@ -69,7 +68,7 @@ templ newProductForm(product foodproducts.FoodProduct) {
 				@formRow("fats", "Fats") {
 					<input
 						type="number"
-						value={ utils.FormatFloat(product.Fats) }
+						value={ formatFloat(float64(form.Fats)) }
 						name="fats"
 						id="fats"
 						placeholder="0"
@@ -79,7 +78,7 @@ templ newProductForm(product foodproducts.FoodProduct) {
 				@formRow("carbs", "Carbs") {
 					<input
 						type="number"
-						value={ utils.FormatFloat(product.Carbs) }
+						value={ formatFloat(float64(form.Carbs)) }
 						name="carbs"
 						id="carbs"
 						placeholder="0"

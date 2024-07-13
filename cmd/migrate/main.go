@@ -7,7 +7,7 @@ import (
 	"os"
 	"strconv"
 
-	"github.com/olehvolynets/pyra/pkg/migrate"
+	"pyra/pkg/migrate"
 )
 
 func main() {

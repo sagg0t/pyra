@@ -1,9 +1,9 @@
 package foodproducts
 
-import fp "github.com/olehvolynets/pyra/pkg/foodproducts"
-import "github.com/olehvolynets/pyra/view/layout"
-import "github.com/olehvolynets/pyra/view/components"
-import "github.com/olehvolynets/pyra/view/utils"
+import fp "pyra/pkg/foodproducts"
+import "pyra/view/layout"
+import "pyra/view/components"
+import "pyra/view/utils"
 
 templ ProductDetails(product fp.FoodProduct) {
 	@layout.Pyra() {
@@ -21,22 +21,22 @@ templ ProductDetails(product fp.FoodProduct) {
 				<tbody>
 					<tr>
 						<td>Calories</td>
-						<td>{ utils.FormatFloat(product.Calories) }</td>
+						<td>{ utils.FormatCompactFloat(product.Calories) }</td>
 					</tr>
 
 					<tr>
 						<td>Proteins</td>
-						<td>{ utils.FormatFloat(product.Proteins) }</td>
+						<td>{ utils.FormatCompactFloat(product.Proteins) }</td>
 					</tr>
 
 					<tr>
 						<td>Fats</td>
-						<td>{ utils.FormatFloat(product.Fats) }</td>
+						<td>{ utils.FormatCompactFloat(product.Fats) }</td>
 					</tr>
 
 					<tr>
 						<td>Carbs</td>
-						<td>{ utils.FormatFloat(product.Carbs) }</td>
+						<td>{ utils.FormatCompactFloat(product.Carbs) }</td>
 					</tr>
 				</tbody>
 			</table>

@@ -4,26 +4,26 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"log"
+	stdlog "log"
 	"net"
 	"net/http"
 	"time"
 
-	pyralog "github.com/olehvolynets/pyra/pkg/log"
+	"pyra/pkg/log"
 )
 
 type Server struct {
 	ip       string
 	port     uint
 	listener net.Listener
-	log      *pyralog.Logger
+	log      *log.Logger
 }
 
 type ServerOption func(*Server)
 
 func New(opts ...ServerOption) (*Server, error) {
 	// FIX: craete a real error logger
-	s := &Server{port: 3000, log: pyralog.NewLogger()}
+	s := &Server{port: 3000, log: log.NewLogger()}
 
 	for _, opt := range opts {
 		opt(s)
@@ -48,7 +48,7 @@ func WithPort(port uint) ServerOption {
 	}
 }
 
-func WithLogger(l *pyralog.Logger) ServerOption {
+func WithLogger(l *log.Logger) ServerOption {
 	return func(s *Server) {
 		s.log = l
 	}
@@ -61,13 +61,13 @@ func (s *Server) Start(ctx context.Context, handler http.Handler) error {
 		ReadHeaderTimeout: 5 * time.Second,
 		IdleTimeout:       2 * time.Second,
 		// FIX: pass a real error logger
-		ErrorLog: log.Default(),
+		ErrorLog: stdlog.Default(),
 		Handler:  handler,
 	}
 
 	errCh := make(chan error, 1)
 
-	s.log.Info("", pyralog.Key, pyralog.ServerStartEvent, "ip", s.ip, "port", s.port)
+	s.log.Info("", log.Key, log.ServerStartEvent, "ip", s.ip, "port", s.port)
 
 	go func() {
 		<-ctx.Done()
@@ -77,11 +77,11 @@ func (s *Server) Start(ctx context.Context, handler http.Handler) error {
 		shutdownCtx, done := context.WithTimeout(context.Background(), 5*time.Second)
 		defer done()
 
-		s.log.Info("shutting down...", pyralog.Key, pyralog.ServerShutdownEvent)
+		s.log.Info("shutting down...", log.Key, log.ServerShutdownEvent)
 
 		errCh <- httpServer.Shutdown(shutdownCtx)
 
-		s.log.Info("stopped", pyralog.Key, pyralog.ServerStopEvent)
+		s.log.Info("stopped", log.Key, log.ServerStopEvent)
 	}()
 
 	if err := httpServer.Serve(s.listener); err != nil && !errors.Is(err, http.ErrServerClosed) {

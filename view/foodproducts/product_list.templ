@@ -1,10 +1,10 @@
 package foodproducts
 
 import "fmt"
-import "github.com/olehvolynets/pyra/view/layout"
-import "github.com/olehvolynets/pyra/view/components"
-import "github.com/olehvolynets/pyra/view/utils"
-import fp "github.com/olehvolynets/pyra/pkg/foodproducts"
+import "pyra/view/layout"
+import "pyra/view/components"
+import "pyra/view/utils"
+import fp "pyra/pkg/foodproducts"
 
 templ ProductList(products []fp.FoodProduct) {
 	@layout.Pyra() {
@@ -40,10 +40,10 @@ templ ProductList(products []fp.FoodProduct) {
 								{ product.Name }
 							</a>
 						</td>
-						<td>{ utils.FormatFloat(product.Calories) }</td>
-						<td>{ utils.FormatFloat(product.Proteins) }</td>
-						<td>{ utils.FormatFloat(product.Fats) }</td>
-						<td>{ utils.FormatFloat(product.Carbs) }</td>
+						<td>{ utils.FormatCompactFloat(product.Calories) }</td>
+						<td>{ utils.FormatCompactFloat(product.Proteins) }</td>
+						<td>{ utils.FormatCompactFloat(product.Fats) }</td>
+						<td>{ utils.FormatCompactFloat(product.Carbs) }</td>
 						<td>
 							<ul class="actions">
 								<li>

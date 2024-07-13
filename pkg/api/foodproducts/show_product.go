@@ -6,7 +6,7 @@ import (
 
 	"github.com/jackc/pgx/v5"
 
-	view "github.com/olehvolynets/pyra/view/foodproducts"
+	view "pyra/view/foodproducts"
 )
 
 func (api *API) Show(w http.ResponseWriter, r *http.Request) {

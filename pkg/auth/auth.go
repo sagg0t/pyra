@@ -8,8 +8,8 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 
-	"github.com/olehvolynets/pyra/pkg/log"
-	"github.com/olehvolynets/pyra/pkg/users"
+	"pyra/pkg/log"
+	"pyra/pkg/users"
 )
 
 type AuthService struct {

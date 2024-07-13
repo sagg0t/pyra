@@ -1,23 +1,24 @@
 package foodproducts
 
 import (
-	"fmt"
-	"log/slog"
 	"net/http"
 
-	view "github.com/olehvolynets/pyra/view/foodproducts"
+	"pyra/pkg/log"
+	view "pyra/view/foodproducts"
 )
 
 func (api *API) List(w http.ResponseWriter, r *http.Request) {
+	l := log.FromContext(r.Context())
+
 	foodProducts, err := api.svc.Index(r.Context())
 	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		fmt.Fprint(w, err.Error())
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		l.Error("failed to list produces", "error", err)
 		return
 	}
 
 	component := view.ProductList(foodProducts)
 	if err := component.Render(r.Context(), w); err != nil {
-		slog.Warn(err.Error())
+		l.Warn(err.Error())
 	}
 }

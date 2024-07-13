@@ -9,11 +9,11 @@ import (
 type Level slog.Level
 
 const (
-	LevelDebug Level = Level(slog.LevelDebug) // -4
+	LevelDebug Level = Level(slog.LevelDebug)
 	LevelTrace Level = -2
-	LevelInfo  Level = Level(slog.LevelInfo)  // 0
-	LevelWarn  Level = Level(slog.LevelWarn)  // 4
-	LevelError Level = Level(slog.LevelError) // 8
+	LevelInfo  Level = Level(slog.LevelInfo)
+	LevelWarn  Level = Level(slog.LevelWarn)
+	LevelError Level = Level(slog.LevelError)
 )
 
 func init() {

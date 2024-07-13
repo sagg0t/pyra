@@ -1,8 +1,8 @@
 package auth
 
 import (
-	authLib "github.com/olehvolynets/pyra/pkg/auth"
-	"github.com/olehvolynets/pyra/pkg/log"
+	authLib "pyra/pkg/auth"
+	"pyra/pkg/log"
 )
 
 type API struct {

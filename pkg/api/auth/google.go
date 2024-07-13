@@ -6,17 +6,21 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"os"
 	"time"
 
+	"github.com/google/uuid"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
 
-	"github.com/olehvolynets/pyra/pkg/auth"
+	"pyra/pkg/auth"
+	"pyra/pkg/log"
+	"pyra/pkg/session"
 )
 
 var googleConfig = &oauth2.Config{
-	ClientID:     "asdlfkj",
-	ClientSecret: "asdlfkj",
+	ClientID:     os.Getenv("GOOGLE_OAUTH2_CLIENT_ID"),
+	ClientSecret: os.Getenv("GOOGLE_OAUTH2_CLIENT_SECRET"),
 	RedirectURL:  "http://localhost:42069/auth/google/callback",
 	Scopes: []string{
 		"https://www.googleapis.com/auth/userinfo.email",
@@ -27,11 +31,20 @@ var googleConfig = &oauth2.Config{
 }
 
 func (api *API) GoogleAuth(w http.ResponseWriter, r *http.Request) {
-	url := googleConfig.AuthCodeURL("state")
-	http.Redirect(w, r, url, http.StatusPermanentRedirect)
+	l := log.FromContext(r.Context())
+	s := session.FromCtx(r.Context())
+
+	state := uuid.New()
+	s.Values["state"] = state.String()
+	url := googleConfig.AuthCodeURL(state.String())
+
+	l.Debug("redirecting to Google for sign in")
+	http.Redirect(w, r, url, http.StatusSeeOther)
 }
 
 func (api *API) GoogleCallback(w http.ResponseWriter, r *http.Request) {
+	l := log.FromContext(r.Context())
+
 	err := r.ParseForm()
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusUnprocessableEntity)
@@ -50,7 +63,8 @@ func (api *API) GoogleCallback(w http.ResponseWriter, r *http.Request) {
 
 	tok, err := googleConfig.Exchange(ctx, code)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		l.ErrorContext(ctx, "failed to exchange access grant", "error", err)
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		return
 	}
 
@@ -58,13 +72,18 @@ func (api *API) GoogleCallback(w http.ResponseWriter, r *http.Request) {
 
 	response, err := client.Get("https://www.googleapis.com/oauth2/v2/userinfo")
 	if err != nil {
+		l.ErrorContext(ctx, "failed to fetch user details from Google", "error", err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 	defer response.Body.Close()
 
 	if response.StatusCode != http.StatusOK {
-		http.Error(w, fmt.Sprintf("responded with a %d trying to fetch user information", response.StatusCode), http.StatusInternalServerError)
+		http.Error(
+			w,
+			fmt.Sprintf("Google responded with a %d trying to fetch user information", response.StatusCode),
+			http.StatusInternalServerError,
+		)
 		return
 	}
 
@@ -80,14 +99,17 @@ func (api *API) GoogleCallback(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	l.Inspect(u)
+
 	user, err := api.authSvc.SignIn(r.Context(), u)
 	if err != nil {
-		api.log.ErrorContext(r.Context(), "sign in failed", "error", err)
+		l.ErrorContext(r.Context(), "sign in failed", "error", err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 
-	prettyUser, _ := json.MarshalIndent(user, "", "	")
-	fmt.Println(string(prettyUser))
+	s := session.FromCtx(r.Context())
 
-	http.Redirect(w, r, "/signIn", http.StatusFound)
+	s.Values[auth.UserIDSessionKey] = user.ID
+
+	http.Redirect(w, r, "/foodProducts", http.StatusSeeOther)
 }

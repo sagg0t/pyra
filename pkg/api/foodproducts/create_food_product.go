@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/olehvolynets/pyra/pkg/foodproducts"
+	"pyra/pkg/foodproducts"
 )
 
 func (api *API) Create(w http.ResponseWriter, r *http.Request) {
@@ -47,8 +47,8 @@ func (api *API) Create(w http.ResponseWriter, r *http.Request) {
 		http.StatusMovedPermanently)
 }
 
-func paramsFromForm(fetch func(key string) string) (foodproducts.Params, error) {
-	reqData := foodproducts.Params{
+func paramsFromForm(fetch func(key string) string) (foodproducts.Form, error) {
+	reqData := foodproducts.Form{
 		Name: fetch("name"),
 	}
 

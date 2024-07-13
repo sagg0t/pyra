@@ -11,8 +11,8 @@ import (
 
 	"github.com/jackc/pgx/v5"
 
-	"github.com/olehvolynets/pyra/pkg/db"
-	"github.com/olehvolynets/pyra/pkg/foodproducts"
+	"pyra/pkg/db"
+	"pyra/pkg/foodproducts"
 )
 
 func main() {

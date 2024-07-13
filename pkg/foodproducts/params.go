@@ -1,6 +1,6 @@
 package foodproducts
 
-type Params struct {
+type Form struct {
 	Name string
 
 	Calories float32
@@ -11,7 +11,7 @@ type Params struct {
 	Carbs    float32
 }
 
-func (p *Params) Normalize() {
+func (p *Form) Normalize() {
 	// Normal values are per 100g
 	ratio := 100.0 / float32(p.Per)
 	p.Calories *= ratio

@@ -7,24 +7,24 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-type FoodProductsDB interface {
+type FoodProductsRepository interface {
 	FindById(ctx context.Context, id uint64) (FoodProduct, error)
 	Index(ctx context.Context) ([]FoodProduct, error)
 	Create(ctx context.Context, params Form) (uint64, error)
 	Delete(ctx context.Context, id uint64) error
 }
 
-type foodProductsDB struct {
+type foodProductsRepo struct {
 	db *pgxpool.Pool
 }
 
-func NewDB(db *pgxpool.Pool) FoodProductsDB {
-	return &foodProductsDB{
+func NewDB(db *pgxpool.Pool) FoodProductsRepository {
+	return &foodProductsRepo{
 		db: db,
 	}
 }
 
-func (s *foodProductsDB) FindById(ctx context.Context, id uint64) (FoodProduct, error) {
+func (s *foodProductsRepo) FindById(ctx context.Context, id uint64) (FoodProduct, error) {
 	row := s.db.QueryRow(ctx, "SELECT * FROM food_products WHERE id = $1 LIMIT 1", id)
 
 	resultProduct := FoodProduct{}
@@ -46,7 +46,7 @@ func (s *foodProductsDB) FindById(ctx context.Context, id uint64) (FoodProduct, 
 	return resultProduct, nil
 }
 
-func (s *foodProductsDB) Index(ctx context.Context) ([]FoodProduct, error) {
+func (s *foodProductsRepo) Index(ctx context.Context) ([]FoodProduct, error) {
 	rows, err := s.db.Query(ctx, "SELECT * FROM food_products;")
 	if err != nil {
 		return nil, err
@@ -60,7 +60,7 @@ func (s *foodProductsDB) Index(ctx context.Context) ([]FoodProduct, error) {
 	return foodProducts, nil
 }
 
-func (s *foodProductsDB) Create(ctx context.Context, params Form) (uint64, error) {
+func (s *foodProductsRepo) Create(ctx context.Context, params Form) (uint64, error) {
 	params.Normalize()
 
 	row := s.db.QueryRow(
@@ -77,7 +77,7 @@ func (s *foodProductsDB) Create(ctx context.Context, params Form) (uint64, error
 	return newId, nil
 }
 
-func (s *foodProductsDB) Delete(ctx context.Context, id uint64) error {
+func (s *foodProductsRepo) Delete(ctx context.Context, id uint64) error {
 	_, err := s.db.Exec(ctx, "DELETE FROM food_products WHERE id = $1", id)
 
 	return err

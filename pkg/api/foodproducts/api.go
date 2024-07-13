@@ -9,11 +9,11 @@ import (
 )
 
 type API struct {
-	svc fp.FoodProductsDB
+	svc fp.FoodProductsRepository
 	log *log.Logger
 }
 
-func NewAPI(logger *log.Logger, svc fp.FoodProductsDB) *API {
+func NewAPI(logger *log.Logger, svc fp.FoodProductsRepository) *API {
 	return &API{
 		svc: svc,
 		log: logger,

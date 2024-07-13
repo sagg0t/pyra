@@ -32,15 +32,10 @@ func (api *API) Create(w http.ResponseWriter, r *http.Request) {
 	validationErrors := validator.Err()
 	if len(validationErrors) > 0 {
 		w.WriteHeader(http.StatusUnprocessableEntity)
-		v := view.NewProduct(foodproducts.CreateResponse{
+		api.Render(w, r, view.NewProduct(foodproducts.CreateResponse{
 			CreateRequest: reqData,
 			Errors:        validationErrors,
-		})
-
-		if err := v.Render(r.Context(), w); err != nil {
-			log.ErrorContext(r.Context(), "failed to render view", "error", err)
-		}
-
+		}))
 		return
 	}
 
@@ -49,20 +44,14 @@ func (api *API) Create(w http.ResponseWriter, r *http.Request) {
 		validationErrors["base"] = err.Error()
 
 		w.WriteHeader(http.StatusUnprocessableEntity)
-		v := view.NewProduct(foodproducts.CreateResponse{
+		api.Render(w, r, view.NewProduct(foodproducts.CreateResponse{
 			CreateRequest: reqData,
 			Errors:        validationErrors,
-		})
-
-		if err := v.Render(r.Context(), w); err != nil {
-			log.ErrorContext(r.Context(), "failed to render view", "error", err)
-		}
+		}))
 		return
 	}
 
-	http.Redirect(w, r,
-		fmt.Sprintf("/foodProducts/%d", newProductID),
-		http.StatusMovedPermanently)
+	http.Redirect(w, r, fmt.Sprintf("/foodProducts/%d", newProductID), http.StatusFound)
 }
 
 func paramsFromForm(fetch func(key string) string) (foodproducts.CreateRequest, error) {

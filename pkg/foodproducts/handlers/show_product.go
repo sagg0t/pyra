@@ -30,7 +30,5 @@ func (api *API) Show(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := view.ProductDetails(product).Render(r.Context(), w); err != nil {
-		log.Warn(err.Error())
-	}
+	api.Render(w, r, view.ProductDetails(product))
 }

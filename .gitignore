@@ -6,8 +6,8 @@
 node_modules/
 /public/assets/
 
-/view/**/*_templ.go
-/view/**/*_templ.txt
+/**/*_templ.go
+/**/*_templ.txt
 
 .env
 !.env_example

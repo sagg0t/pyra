@@ -16,8 +16,5 @@ func (api *API) List(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	component := view.ProductList(foodProducts)
-	if err := component.Render(r.Context(), w); err != nil {
-		log.Warn(err.Error())
-	}
+	api.Render(w, r, view.ProductList(foodProducts))
 }

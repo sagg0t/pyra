@@ -1,4 +1,4 @@
-package foodproducts
+package handlers
 
 import (
 	"fmt"
@@ -6,39 +6,57 @@ import (
 	"strconv"
 
 	"pyra/pkg/foodproducts"
+	"pyra/pkg/foodproducts/view"
 )
 
 func (api *API) Create(w http.ResponseWriter, r *http.Request) {
+	log := api.RequestLogger(r)
+	session := api.Session(r)
+
 	err := r.ParseForm()
 	if err != nil {
-		api.log.Trace("failed to parse form", "error", err)
-		w.WriteHeader(http.StatusUnprocessableEntity)
+		session.AddFlash(fmt.Sprintf("failed to parse form: %s", err.Error()))
+		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 
 	reqData, err := paramsFromForm(r.FormValue)
 	if err != nil {
-		api.log.Trace("failed to map form data", "error", err)
+		log.Trace("failed to map form data", "error", err)
 		w.WriteHeader(http.StatusUnprocessableEntity)
 		return
 	}
 
 	validator := foodproducts.NewCreateValidator(reqData)
 	validator.Validate()
-	if err = validator.Err(); err != nil {
-		api.log.Trace("validation error", "error", err)
-
+	validationErrors := validator.Err()
+	if len(validationErrors) > 0 {
 		w.WriteHeader(http.StatusUnprocessableEntity)
-		fmt.Fprint(w, err)
+		v := view.NewProduct(foodproducts.CreateResponse{
+			CreateRequest: reqData,
+			Errors:        validationErrors,
+		})
+
+		if err := v.Render(r.Context(), w); err != nil {
+			log.ErrorContext(r.Context(), "failed to render view", "error", err)
+		}
+
 		return
 	}
 
 	newProductID, err := api.svc.Create(r.Context(), reqData)
 	if err != nil {
-		api.log.Trace("validation error", "error", err)
+		validationErrors["base"] = err.Error()
 
 		w.WriteHeader(http.StatusUnprocessableEntity)
-		fmt.Fprint(w, err)
+		v := view.NewProduct(foodproducts.CreateResponse{
+			CreateRequest: reqData,
+			Errors:        validationErrors,
+		})
+
+		if err := v.Render(r.Context(), w); err != nil {
+			log.ErrorContext(r.Context(), "failed to render view", "error", err)
+		}
 		return
 	}
 
@@ -47,8 +65,8 @@ func (api *API) Create(w http.ResponseWriter, r *http.Request) {
 		http.StatusMovedPermanently)
 }
 
-func paramsFromForm(fetch func(key string) string) (foodproducts.Form, error) {
-	reqData := foodproducts.Form{
+func paramsFromForm(fetch func(key string) string) (foodproducts.CreateRequest, error) {
+	reqData := foodproducts.CreateRequest{
 		Name: fetch("name"),
 	}
 
@@ -58,11 +76,11 @@ func paramsFromForm(fetch func(key string) string) (foodproducts.Form, error) {
 	}
 	reqData.Calories = float32(calories64)
 
-	per64, err := strconv.ParseUint(fetch("per"), 10, 32)
+	per64, err := strconv.ParseFloat(fetch("per"), 32)
 	if err != nil {
 		return reqData, err
 	}
-	reqData.Per = uint32(per64)
+	reqData.Per = float32(per64)
 
 	proteins64, err := strconv.ParseFloat(fetch("proteins"), 32)
 	if err != nil {

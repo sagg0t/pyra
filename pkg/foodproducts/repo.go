@@ -10,7 +10,7 @@ import (
 type FoodProductsRepository interface {
 	FindById(ctx context.Context, id uint64) (FoodProduct, error)
 	Index(ctx context.Context) ([]FoodProduct, error)
-	Create(ctx context.Context, params Form) (uint64, error)
+	Create(ctx context.Context, params CreateRequest) (uint64, error)
 	Delete(ctx context.Context, id uint64) error
 }
 
@@ -60,7 +60,7 @@ func (s *foodProductsRepo) Index(ctx context.Context) ([]FoodProduct, error) {
 	return foodProducts, nil
 }
 
-func (s *foodProductsRepo) Create(ctx context.Context, params Form) (uint64, error) {
+func (s *foodProductsRepo) Create(ctx context.Context, params CreateRequest) (uint64, error) {
 	params.Normalize()
 
 	row := s.db.QueryRow(

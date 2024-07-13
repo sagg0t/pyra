@@ -1,10 +1,10 @@
-package foodproducts
+package view
 
 import "pyra/view/layout"
 import "pyra/view/components"
 import "pyra/pkg/foodproducts"
 
-templ NewProduct(form foodproducts.Form) {
+templ NewProduct(form foodproducts.CreateResponse) {
 	@layout.Pyra() {
 		@components.Header() {
 			<div class="flex justify-between w-full">
@@ -20,10 +20,14 @@ templ NewProduct(form foodproducts.Form) {
 	}
 }
 
-templ newProductForm(form foodproducts.Form) {
+templ newProductForm(form foodproducts.CreateResponse) {
 	<form action="/foodProducts" method="POST">
+		if err, ok := form.Errors["base"]; ok {
+			<p class="text-red-300">{err}</p>
+		}
+
 		<div class="flex flex-col items-start gap-4">
-			@formRow("name", "Name") {
+			@formRow("name", "Name", form.Errors) {
 				<input
 					type="text"
 					value={ form.Name }
@@ -32,8 +36,9 @@ templ newProductForm(form foodproducts.Form) {
 					required
 				/>
 			}
+
 			<div class="flex gap-2">
-				@formRow("calories", "Calories") {
+				@formRow("calories", "Calories", form.Errors) {
 					<input
 						type="number"
 						value={ formatFloat(float64(form.Calories)) }
@@ -43,7 +48,7 @@ templ newProductForm(form foodproducts.Form) {
 						required
 					/>
 				}
-				@formRow("per", "Per") {
+				@formRow("per", "Per", form.Errors) {
 					<input
 						type="number"
 						value={ formatFloat(float64(form.Per)) }
@@ -55,7 +60,7 @@ templ newProductForm(form foodproducts.Form) {
 				}
 			</div>
 			<div class="macros flex gap-2">
-				@formRow("proteins", "Proteins") {
+				@formRow("proteins", "Proteins", form.Errors) {
 					<input
 						type="number"
 						value={ formatFloat(float64(form.Proteins)) }
@@ -65,7 +70,7 @@ templ newProductForm(form foodproducts.Form) {
 						required
 					/>
 				}
-				@formRow("fats", "Fats") {
+				@formRow("fats", "Fats", form.Errors) {
 					<input
 						type="number"
 						value={ formatFloat(float64(form.Fats)) }
@@ -75,7 +80,7 @@ templ newProductForm(form foodproducts.Form) {
 						required
 					/>
 				}
-				@formRow("carbs", "Carbs") {
+				@formRow("carbs", "Carbs", form.Errors) {
 					<input
 						type="number"
 						value={ formatFloat(float64(form.Carbs)) }
@@ -93,11 +98,13 @@ templ newProductForm(form foodproducts.Form) {
 	</form>
 }
 
-templ formRow(name, label string) {
+templ formRow(name, label string, errors map[string]string) {
 	<div class="form-control">
 		<label for={ name }>{ label }</label>
-		<div>
-			{ children... }
-		</div>
+		<div>{ children... }</div>
+
+		if err, ok := errors[name]; ok {
+			<span class="error">{ err }</span>
+		}
 	</div>
 }

@@ -1,5 +1,12 @@
 package components
 
-templ Input(typ, name, value string) {
-	<input type={ typ } name={ name } value={ value }/>
+templ Input(typ, name, value, err string) {
+	<div class="form-control">
+		<label>{ name }</label>
+		<input type={ typ } name={ name } value={ value } />
+
+		if err != "" {
+			<div class="error">{ err }</div>
+		}
+	</div>
 }

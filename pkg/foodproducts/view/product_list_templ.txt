@@ -1,0 +1,12 @@
+<div class=\"flex justify-between\"><h1>Products</h1><a href=\"/foodProducts/new\"><button type=\"button\" class=\"btn-primary\">Add</button></a></div>
+ <table id=\"product-list\"><thead><tr><th>Name</th><th>Calories</th><th>Proteins</th><th>Fats</th><th>Carbs</th><th></th></tr></thead> <tbody hx-confirm=\"Are you sure?\" hx-target=\"closest tr\" hx-swap=\"outerHTML\">
+<tr><td><a href=\"
+\" class=\"link-primary\">
+</a></td><td>
+</td><td>
+</td><td>
+</td><td>
+</td><td><ul class=\"actions\"><li><a href=\"
+\" class=\"link-secondary\">Edit</a></li><li><span hx-delete=\"
+\" class=\"link-secondary\">Delete</span></li></ul></td></tr>
+</tbody></table>

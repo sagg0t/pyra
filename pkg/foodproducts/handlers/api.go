@@ -1,22 +1,22 @@
-package foodproducts
+package handlers
 
 import (
 	"net/http"
 	"strconv"
 
-	fp "pyra/pkg/foodproducts"
-	"pyra/pkg/log"
+	"pyra/pkg/foodproducts"
+	"pyra/pkg/pyra"
 )
 
 type API struct {
-	svc fp.FoodProductsRepository
-	log *log.Logger
+	pyra.API
+
+	svc foodproducts.FoodProductsRepository
 }
 
-func NewAPI(logger *log.Logger, svc fp.FoodProductsRepository) *API {
+func NewAPI(svc foodproducts.FoodProductsRepository) *API {
 	return &API{
 		svc: svc,
-		log: logger,
 	}
 }
 

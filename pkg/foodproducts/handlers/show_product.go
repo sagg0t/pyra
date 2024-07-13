@@ -1,4 +1,4 @@
-package foodproducts
+package handlers
 
 import (
 	"errors"
@@ -6,10 +6,12 @@ import (
 
 	"github.com/jackc/pgx/v5"
 
-	view "pyra/view/foodproducts"
+	"pyra/pkg/foodproducts/view"
 )
 
 func (api *API) Show(w http.ResponseWriter, r *http.Request) {
+	log := api.RequestLogger(r)
+
 	id, err := api.productID(r)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
@@ -19,16 +21,16 @@ func (api *API) Show(w http.ResponseWriter, r *http.Request) {
 	product, err := api.svc.FindById(r.Context(), id)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			w.WriteHeader(http.StatusNotFound)
+			http.NotFound(w, r)
 			return
 		}
 
-		api.log.Error("failed to retrieve a record", "error", err)
-		w.WriteHeader(http.StatusInternalServerError)
+		log.Error("failed to retrieve a record", "error", err)
+		api.InternalServerError(w)
 		return
 	}
 
 	if err := view.ProductDetails(product).Render(r.Context(), w); err != nil {
-		api.log.Warn(err.Error())
+		log.Warn(err.Error())
 	}
 }

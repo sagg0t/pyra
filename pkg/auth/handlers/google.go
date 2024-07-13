@@ -1,4 +1,4 @@
-package auth
+package handlers
 
 import (
 	"context"
@@ -14,8 +14,6 @@ import (
 	"golang.org/x/oauth2/google"
 
 	"pyra/pkg/auth"
-	"pyra/pkg/log"
-	"pyra/pkg/session"
 )
 
 var googleConfig = &oauth2.Config{
@@ -31,19 +29,19 @@ var googleConfig = &oauth2.Config{
 }
 
 func (api *API) GoogleAuth(w http.ResponseWriter, r *http.Request) {
-	l := log.FromContext(r.Context())
-	s := session.FromContext(r.Context())
+	log := api.RequestLogger(r)
+	session := api.Session(r)
 
 	state := uuid.New()
-	s.Values["state"] = state.String()
+	session.Values["state"] = state.String()
 	url := googleConfig.AuthCodeURL(state.String())
 
-	l.Debug("redirecting to Google for sign in")
+	log.Debug("redirecting to Google for sign in")
 	http.Redirect(w, r, url, http.StatusSeeOther)
 }
 
 func (api *API) GoogleCallback(w http.ResponseWriter, r *http.Request) {
-	l := log.FromContext(r.Context())
+	log := api.RequestLogger(r)
 
 	err := r.ParseForm()
 	if err != nil {
@@ -53,7 +51,8 @@ func (api *API) GoogleCallback(w http.ResponseWriter, r *http.Request) {
 
 	code := r.FormValue("code")
 	if code == "" {
-		http.Error(w, "invalid code", http.StatusInternalServerError)
+		log.ErrorContext(r.Context(), "invalid code")
+		api.InternalServerError(w)
 		return
 	}
 
@@ -63,8 +62,8 @@ func (api *API) GoogleCallback(w http.ResponseWriter, r *http.Request) {
 
 	tok, err := googleConfig.Exchange(ctx, code)
 	if err != nil {
-		l.ErrorContext(ctx, "failed to exchange access grant", "error", err)
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		log.ErrorContext(ctx, "failed to exchange access grant", "error", err)
+		api.InternalServerError(w)
 		return
 	}
 
@@ -72,44 +71,47 @@ func (api *API) GoogleCallback(w http.ResponseWriter, r *http.Request) {
 
 	response, err := client.Get("https://www.googleapis.com/oauth2/v2/userinfo")
 	if err != nil {
-		l.ErrorContext(ctx, "failed to fetch user details from Google", "error", err)
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		log.ErrorContext(ctx, "failed to fetch user details from Google", "error", err)
+		api.InternalServerError(w)
 		return
 	}
 	defer response.Body.Close()
 
 	if response.StatusCode != http.StatusOK {
-		http.Error(
-			w,
+		log.ErrorContext(
+			ctx,
 			fmt.Sprintf("Google responded with a %d trying to fetch user information", response.StatusCode),
-			http.StatusInternalServerError,
 		)
+		api.InternalServerError(w)
 		return
 	}
 
 	responseBytes, err := io.ReadAll(response.Body)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		log.ErrorContext(ctx, "failed to read response", "error", err)
+		api.InternalServerError(w)
 		return
 	}
 
 	var u auth.GoogleUser
 	if err := json.Unmarshal(responseBytes, &u); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		log.ErrorContext(ctx, "failed to unmarshal response", "error", err)
+		api.InternalServerError(w)
 		return
 	}
 
-	l.Inspect(u)
+	log.Inspect(u)
 
 	user, err := api.authSvc.SignIn(r.Context(), u)
 	if err != nil {
-		l.ErrorContext(r.Context(), "sign in failed", "error", err)
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		log.ErrorContext(ctx, "sign in failed", "error", err)
+		api.InternalServerError(w)
+		return
 	}
 
-	s := session.FromContext(r.Context())
+	session := api.Session(r)
 
-	s.Values[auth.UserIDSessionKey] = user.ID
+	session.Values[auth.UserIDSessionKey] = user.ID
 
 	http.Redirect(w, r, "/foodProducts", http.StatusSeeOther)
 }

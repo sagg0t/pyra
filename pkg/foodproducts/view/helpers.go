@@ -1,4 +1,4 @@
-package foodproducts
+package view
 
 import "strconv"
 

@@ -1,31 +1,29 @@
 package foodproducts
 
-import "errors"
-
 type Validator interface {
 	Validate()
-	Err() error
+	Err() map[string]string
 }
 
 var (
-	ErrNoName      = errors.New("can't be blank")
-	ErrNegative    = errors.New("can't be less than 0")
-	ErrNotPositive = errors.New("must be greater than 0")
+	errNoName      = "can't be blank"
+	errNegative    = "can't be less than 0"
+	errNotPositive = "must be greater than 0"
 )
 
 type validator struct {
-	params Form
-	err    error
+	params CreateRequest
+	err    map[string]string
 }
 
-func NewCreateValidator(params Form) Validator {
+func NewCreateValidator(params CreateRequest) Validator {
 	return &validator{
 		params: params,
-		err:    nil,
+		err:    make(map[string]string),
 	}
 }
 
-func (v *validator) Err() error {
+func (v *validator) Err() map[string]string {
 	return v.err
 }
 
@@ -33,32 +31,26 @@ func (v *validator) Validate() {
 	p := &v.params
 
 	if len(p.Name) == 0 {
-		v.err = ErrNoName
-		return
+		v.err["name"] = errNoName
 	}
 
 	if p.Calories < 0 {
-		v.err = ErrNegative
-		return
+		v.err["calories"] = errNegative
 	}
 
 	if p.Per <= 0 {
-		v.err = ErrNotPositive
-		return
+		v.err["per"] = errNotPositive
 	}
 
 	if p.Proteins < 0 {
-		v.err = ErrNegative
-		return
+		v.err["proteins"] = errNegative
 	}
 
 	if p.Fats < 0 {
-		v.err = ErrNegative
-		return
+		v.err["fats"] = errNegative
 	}
 
 	if p.Carbs < 0 {
-		v.err = ErrNegative
-		return
+		v.err["carbs"] = errNegative
 	}
 }

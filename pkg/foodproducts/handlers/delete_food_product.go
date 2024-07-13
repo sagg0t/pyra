@@ -1,4 +1,4 @@
-package foodproducts
+package handlers
 
 import (
 	"errors"
@@ -8,6 +8,8 @@ import (
 )
 
 func (api *API) Delete(w http.ResponseWriter, r *http.Request) {
+	log := api.RequestLogger(r)
+
 	id, err := api.productID(r)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
@@ -17,12 +19,12 @@ func (api *API) Delete(w http.ResponseWriter, r *http.Request) {
 	err = api.svc.Delete(r.Context(), id)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			w.WriteHeader(http.StatusNotFound)
+			http.NotFound(w, r)
 			return
 		}
 
-		api.log.Error("failed to delete FoodProduct", "error", err)
-		w.WriteHeader(http.StatusInternalServerError)
+		log.Error("failed to delete FoodProduct", "error", err)
+		api.InternalServerError(w)
 		return
 	}
 

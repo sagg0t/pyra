@@ -1,0 +1,1 @@
+<a href=\"/auth/google\" class=\"btn-primary\">Google</a>

@@ -5,10 +5,10 @@ import (
 
 	"github.com/jackc/pgx/v5/pgxpool"
 
-	authAPI "pyra/pkg/api/auth"
-	foodProductsAPI "pyra/pkg/api/foodproducts"
 	"pyra/pkg/auth"
+	authAPI "pyra/pkg/auth/handlers"
 	"pyra/pkg/foodproducts"
+	foodProductsAPI "pyra/pkg/foodproducts/handlers"
 	"pyra/pkg/log"
 	"pyra/pkg/users"
 )
@@ -18,7 +18,7 @@ func Routes(db *pgxpool.Pool, logger *log.Logger) *http.ServeMux {
 
 	mux.HandleFunc("/", rootHandler)
 	authRoutes(mux, db, logger)
-	foodProductsRoutes(mux, db, logger)
+	foodProductsRoutes(mux, db)
 
 	return mux
 }
@@ -37,16 +37,16 @@ func authRoutes(mux *http.ServeMux, db *pgxpool.Pool, logger *log.Logger) {
 
 	authSvc := auth.NewService(logger, db, providersRepo, usersRepo)
 
-	api := authAPI.NewAPI(logger, authSvc)
+	api := authAPI.NewAPI(authSvc)
 
 	mux.Handle("GET /signIn", auth.NotAuthenticated(api.SignIn))
 	mux.Handle("GET /auth/google", auth.NotAuthenticated(api.GoogleAuth))
 	mux.Handle("GET /auth/google/callback", auth.NotAuthenticated(api.GoogleCallback))
 }
 
-func foodProductsRoutes(mux *http.ServeMux, db *pgxpool.Pool, logger *log.Logger) {
+func foodProductsRoutes(mux *http.ServeMux, db *pgxpool.Pool) {
 	service := foodproducts.NewDB(db)
-	api := foodProductsAPI.NewAPI(logger, service)
+	api := foodProductsAPI.NewAPI(service)
 
 	mux.Handle("GET /foodProducts", auth.Authenticated(api.List))
 	mux.Handle("GET /foodProducts/{id}", auth.Authenticated(api.Show))

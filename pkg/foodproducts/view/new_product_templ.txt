@@ -1,0 +1,29 @@
+<div class=\"flex justify-between w-full\"><h1>Add a Product</h1><a href=\"/foodProducts\" class=\"link-primary\">List</a></div>
+ <section>
+</section>
+<form action=\"/foodProducts\" method=\"POST\">
+<p class=\"text-red-300\">
+</p>
+<div class=\"flex flex-col items-start gap-4\">
+<input type=\"text\" value=\"
+\" name=\"name\" id=\"name\" required>
+<div class=\"flex gap-2\">
+<input type=\"number\" value=\"
+\" name=\"calories\" id=\"calories\" placeholder=\"0\" required>
+<input type=\"number\" value=\"
+\" name=\"per\" id=\"per\" placeholder=\"100\" required>
+</div><div class=\"macros flex gap-2\">
+<input type=\"number\" value=\"
+\" name=\"proteins\" id=\"proteins\" placeholder=\"0\" required>
+<input type=\"number\" value=\"
+\" name=\"fats\" id=\"fats\" placeholder=\"0\" required>
+<input type=\"number\" value=\"
+\" name=\"carbs\" id=\"carbs\" placeholder=\"0\" required>
+</div><button type=\"submit\" class=\"btn-secondary\">Submit</button></div></form>
+<div class=\"form-control\"><label for=\"
+\">
+</label><div>
+</div>
+<span class=\"error\">
+</span>
+</div>

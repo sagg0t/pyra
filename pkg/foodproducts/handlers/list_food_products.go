@@ -1,24 +1,23 @@
-package foodproducts
+package handlers
 
 import (
 	"net/http"
 
-	"pyra/pkg/log"
-	view "pyra/view/foodproducts"
+	"pyra/pkg/foodproducts/view"
 )
 
 func (api *API) List(w http.ResponseWriter, r *http.Request) {
-	l := log.FromContext(r.Context())
+	log := api.RequestLogger(r)
 
 	foodProducts, err := api.svc.Index(r.Context())
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		l.Error("failed to list produces", "error", err)
+		log.Error("failed to list produces", "error", err)
+		api.InternalServerError(w)
 		return
 	}
 
 	component := view.ProductList(foodProducts)
 	if err := component.Render(r.Context(), w); err != nil {
-		l.Warn(err.Error())
+		log.Warn(err.Error())
 	}
 }

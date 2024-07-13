@@ -2,6 +2,10 @@
     label {
         @apply p-2 font-medium;
     }
+
+    .error {
+        @apply text-red-300;
+    }
 }
 
 input[type="text"], input[type="number"], input[type="email"],

@@ -26,40 +26,36 @@ func init() {
 	store.Options.Secure = false
 }
 
-// type Session struct {
-// 	*sessions.Session
-// 	req *http.Request
-// }
-
-// func NewSession(r *http.Request) (*Session, error) {
-// 	s := &Session{req: r}
-// 	err := s.extract()
-// 	if err != nil {
-// 		return nil, err
-// 	}
-//
-// 	return s, nil
-// }
-
-func Get(r *http.Request) (*sessions.Session, error) {
-	return store.Get(r, SessionCookieName)
+type Session struct {
+	*sessions.Session
+	req *http.Request
 }
 
-// func (s *Session) extract() error {
-// 	session, err := store.Get(s.req, SessionCookieName)
-// 	if err != nil {
-// 		return err
-// 	}
-//
-// 	s.Session = session
-//
-// 	return nil
-// }
+func NewSession(r *http.Request) (*Session, error) {
+	s := &Session{req: r}
+	err := s.extract()
+	if err != nil {
+		return nil, err
+	}
 
-func CtxWithSession(s *sessions.Session, ctx context.Context) context.Context {
+	return s, nil
+}
+
+func (s *Session) extract() error {
+	session, err := store.Get(s.req, SessionCookieName)
+	if err != nil {
+		return err
+	}
+
+	s.Session = session
+
+	return nil
+}
+
+func CtxWithSession(s *Session, ctx context.Context) context.Context {
 	return context.WithValue(ctx, sessionCtxKey, s)
 }
 
-func FromCtx(ctx context.Context) *sessions.Session {
-	return ctx.Value(sessionCtxKey).(*sessions.Session)
+func FromContext(ctx context.Context) *Session {
+	return ctx.Value(sessionCtxKey).(*Session)
 }

@@ -1,7 +1,6 @@
 package server
 
 import (
-	"fmt"
 	"net/http"
 	"time"
 
@@ -51,7 +50,5 @@ func Logger(logger *log.Logger, f http.Handler) http.Handler {
 			"took", took,
 			"location", ww.Header().Get("Location"),
 		)
-		fmt.Println()
-		fmt.Println()
 	})
 }

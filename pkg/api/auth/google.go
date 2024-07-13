@@ -32,7 +32,7 @@ var googleConfig = &oauth2.Config{
 
 func (api *API) GoogleAuth(w http.ResponseWriter, r *http.Request) {
 	l := log.FromContext(r.Context())
-	s := session.FromCtx(r.Context())
+	s := session.FromContext(r.Context())
 
 	state := uuid.New()
 	s.Values["state"] = state.String()
@@ -107,7 +107,7 @@ func (api *API) GoogleCallback(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 
-	s := session.FromCtx(r.Context())
+	s := session.FromContext(r.Context())
 
 	s.Values[auth.UserIDSessionKey] = user.ID
 

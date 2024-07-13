@@ -31,7 +31,7 @@ func (r *responseWithSession) Write(b []byte) (int, error) {
 
 func (r *responseWithSession) writeSession() {
 	l := log.FromContext(r.req.Context())
-	s := session.FromCtx(r.req.Context())
+	s := session.FromContext(r.req.Context())
 
 	err := s.Save(r.req, r.ResponseWriter)
 	if err != nil {
@@ -46,7 +46,7 @@ func Session(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		l := log.FromContext(r.Context())
 
-		s, err := session.Get(r)
+		s, err := session.NewSession(r)
 		if err != nil {
 			l.Error("session read", "error", err)
 			http.Error(w, "Internal server error", http.StatusInternalServerError)

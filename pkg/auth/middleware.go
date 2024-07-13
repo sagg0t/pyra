@@ -19,7 +19,7 @@ func init() {
 func Authenticated(next http.HandlerFunc) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		l := log.FromContext(r.Context())
-		s := session.FromCtx(r.Context())
+		s := session.FromContext(r.Context())
 
 		if _, ok := s.Values[UserIDSessionKey]; ok {
 			next(w, r)
@@ -35,7 +35,7 @@ func Authenticated(next http.HandlerFunc) http.Handler {
 func NotAuthenticated(next http.HandlerFunc) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		l := log.FromContext(r.Context())
-		s := session.FromCtx(r.Context())
+		s := session.FromContext(r.Context())
 
 		if _, ok := s.Values[UserIDSessionKey]; !ok {
 			next(w, r)
@@ -50,7 +50,7 @@ func NotAuthenticated(next http.HandlerFunc) http.Handler {
 
 func IsAuthenticated(r *http.Request) bool {
 	log := log.FromContext(r.Context())
-	s := session.FromCtx(r.Context())
+	s := session.FromContext(r.Context())
 
 	userId, ok := s.Values[UserIDSessionKey]
 

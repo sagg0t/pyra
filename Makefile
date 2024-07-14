@@ -52,6 +52,8 @@ seed:
 .PHONY: clean
 clean:
 	rm -rf bin/**/*
+	rm -rf public/assets/**/*
+	rm -rf temp/bin/**/*
 
 .PHONY: dev
 dev:

@@ -53,5 +53,6 @@ func foodProductsRoutes(mux *http.ServeMux, db *pgxpool.Pool) {
 	mux.Handle("GET /foodProducts/new", auth.Authenticated(api.New))
 	mux.Handle("GET /foodProducts/{id}/edit", auth.Authenticated(api.Edit))
 	mux.Handle("POST /foodProducts", auth.Authenticated(api.Create))
+	mux.Handle("PUT /foodProducts/{id}", auth.Authenticated(api.Update))
 	mux.Handle("DELETE /foodProducts/{id}", auth.Authenticated(api.Delete))
 }

@@ -1,7 +1,7 @@
 package layout
 
 templ Navigation() {
-	<nav>
+	<nav class="h-full flex flex-col justify-between">
 		<ul>
 			<li class={ templ.KV("active", false) }>
 				<a href="#">Menu</a>
@@ -13,6 +13,12 @@ templ Navigation() {
 
 			<li class={ templ.KV("active", false) }>
 				<a href="#">Dishes</a>
+			</li>
+		</ul>
+
+		<ul>
+			<li>
+				<span hx-post="/signOut" class="link-primary">Sign Out</span>
 			</li>
 		</ul>
 	</nav>

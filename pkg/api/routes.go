@@ -10,15 +10,36 @@ import (
 	"pyra/pkg/foodproducts"
 	foodProductsAPI "pyra/pkg/foodproducts/handlers"
 	"pyra/pkg/log"
+	"pyra/pkg/pyra"
 	"pyra/pkg/users"
 )
 
 func Routes(db *pgxpool.Pool, logger *log.Logger) *http.ServeMux {
 	mux := http.NewServeMux()
 
+	usersRepo := users.NewRepository(db)
+	providersRepo := auth.NewProviderRepository(db)
+	foodProductRepo := foodproducts.NewRepository(db)
+
+	authSvc := auth.NewService(logger, db, providersRepo, usersRepo)
+
+	authHandler := authAPI.NewAPI(authSvc)
+	foodProductsHandler := foodProductsAPI.NewAPI(pyra.API{}, foodProductRepo)
+
 	mux.HandleFunc("/", rootHandler)
-	authRoutes(mux, db, logger)
-	foodProductsRoutes(mux, db)
+
+	mux.Handle("GET /signIn", auth.NotAuthenticated(authHandler.SignIn))
+	mux.Handle("GET /auth/google", auth.NotAuthenticated(authHandler.GoogleAuth))
+	mux.Handle("GET /auth/google/callback", auth.NotAuthenticated(authHandler.GoogleCallback))
+	mux.Handle("POST /signOut", auth.Authenticated(authHandler.SignOut))
+
+	mux.Handle("GET /foodProducts", auth.Authenticated(foodProductsHandler.List))
+	mux.Handle("GET /foodProducts/{id}", auth.Authenticated(foodProductsHandler.Show))
+	mux.Handle("GET /foodProducts/new", auth.Authenticated(foodProductsHandler.New))
+	mux.Handle("GET /foodProducts/{id}/edit", auth.Authenticated(foodProductsHandler.Edit))
+	mux.Handle("POST /foodProducts", auth.Authenticated(foodProductsHandler.Create))
+	mux.Handle("PUT /foodProducts/{id}", auth.Authenticated(foodProductsHandler.Update))
+	mux.Handle("DELETE /foodProducts/{id}", auth.Authenticated(foodProductsHandler.Delete))
 
 	return mux
 }
@@ -29,30 +50,4 @@ func rootHandler(w http.ResponseWriter, r *http.Request) {
 	} else {
 		http.Redirect(w, r, "/signIn", http.StatusTemporaryRedirect)
 	}
-}
-
-func authRoutes(mux *http.ServeMux, db *pgxpool.Pool, logger *log.Logger) {
-	usersRepo := users.NewRepository(db)
-	providersRepo := auth.NewProviderRepository(db)
-
-	authSvc := auth.NewService(logger, db, providersRepo, usersRepo)
-
-	api := authAPI.NewAPI(authSvc)
-
-	mux.Handle("GET /signIn", auth.NotAuthenticated(api.SignIn))
-	mux.Handle("GET /auth/google", auth.NotAuthenticated(api.GoogleAuth))
-	mux.Handle("GET /auth/google/callback", auth.NotAuthenticated(api.GoogleCallback))
-}
-
-func foodProductsRoutes(mux *http.ServeMux, db *pgxpool.Pool) {
-	service := foodproducts.NewDB(db)
-	api := foodProductsAPI.NewAPI(service)
-
-	mux.Handle("GET /foodProducts", auth.Authenticated(api.List))
-	mux.Handle("GET /foodProducts/{id}", auth.Authenticated(api.Show))
-	mux.Handle("GET /foodProducts/new", auth.Authenticated(api.New))
-	mux.Handle("GET /foodProducts/{id}/edit", auth.Authenticated(api.Edit))
-	mux.Handle("POST /foodProducts", auth.Authenticated(api.Create))
-	mux.Handle("PUT /foodProducts/{id}", auth.Authenticated(api.Update))
-	mux.Handle("DELETE /foodProducts/{id}", auth.Authenticated(api.Delete))
 }

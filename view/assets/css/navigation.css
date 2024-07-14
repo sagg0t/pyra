@@ -6,14 +6,10 @@
 
     nav {
         ul {
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-
-            @apply px-4;
+            @apply flex flex-col px-4 gap-5;
 
             li {
-                cursor: pointer;
+                @apply cursor-pointer;
 
                 &:hover {
                     transform: scale(1.05);

@@ -24,15 +24,9 @@ func (api *API) Edit(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	form := foodproducts.CreateResponse{
-		CreateRequest: foodproducts.CreateRequest{
-			Name:     product.Name,
-			Calories: product.Calories,
-			Per:      100.0,
-			Proteins: product.Proteins,
-			Fats:     product.Fats,
-			Carbs:    product.Carbs,
-		},
+	form := foodproducts.ProductForm{
+		FoodProduct: product,
+		Per:         100,
 	}
 
 	api.Render(w, r, view.EditProduct(form))

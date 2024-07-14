@@ -1,26 +1,48 @@
 package foodproducts
 
-type CreateRequest struct {
-	Name string
+const (
+	errNoName      = "can't be blank"
+	errNegative    = "can't be less than 0"
+	errNotPositive = "must be greater than 0"
+)
 
-	Calories float32
-	Per      float32
-
-	Proteins float32
-	Fats     float32
-	Carbs    float32
-}
-
-func (p *CreateRequest) Normalize() {
-	// Normal values are per 100g
-	ratio := 100.0 / p.Per
-	p.Calories *= ratio
-	p.Proteins *= ratio
-	p.Fats *= ratio
-	p.Carbs *= ratio
-}
-
-type CreateResponse struct {
-	CreateRequest
+type ProductForm struct {
+	FoodProduct
+	Per    float32
 	Errors map[string]string
+}
+
+func (f *ProductForm) Validate() bool {
+	if len(f.Name) == 0 {
+		f.Errors["name"] = errNoName
+	}
+
+	if f.Calories < 0 {
+		f.Errors["calories"] = errNegative
+	}
+
+	if f.Per <= 0 {
+		f.Errors["per"] = errNotPositive
+	}
+
+	if f.Proteins < 0 {
+		f.Errors["proteins"] = errNegative
+	}
+
+	if f.Fats < 0 {
+		f.Errors["fats"] = errNegative
+	}
+
+	if f.Carbs < 0 {
+		f.Errors["carbs"] = errNegative
+	}
+
+	return len(f.Errors) == 0
+}
+
+func (f *ProductForm) NormalizedProduct() FoodProduct {
+	clone := f.FoodProduct
+	clone.Normalize(f.Per)
+
+	return clone
 }

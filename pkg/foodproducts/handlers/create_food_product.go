@@ -20,74 +20,68 @@ func (api *API) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	reqData, err := paramsFromForm(r.FormValue)
+	form, err := paramsFromForm(r.FormValue)
 	if err != nil {
 		log.Trace("failed to map form data", "error", err)
 		w.WriteHeader(http.StatusUnprocessableEntity)
 		return
 	}
 
-	validator := foodproducts.NewCreateValidator(reqData)
-	validator.Validate()
-	validationErrors := validator.Err()
-	if len(validationErrors) > 0 {
+	if !form.Validate() {
 		w.WriteHeader(http.StatusUnprocessableEntity)
-		api.Render(w, r, view.NewProduct(foodproducts.CreateResponse{
-			CreateRequest: reqData,
-			Errors:        validationErrors,
-		}))
+		api.Render(w, r, view.NewProduct(form))
 		return
 	}
 
-	newProductID, err := api.svc.Create(r.Context(), reqData)
+	newProductID, err := api.svc.Create(r.Context(), form.NormalizedProduct())
 	if err != nil {
-		validationErrors["base"] = err.Error()
+		form.Errors["base"] = err.Error()
 
 		w.WriteHeader(http.StatusUnprocessableEntity)
-		api.Render(w, r, view.NewProduct(foodproducts.CreateResponse{
-			CreateRequest: reqData,
-			Errors:        validationErrors,
-		}))
+		api.Render(w, r, view.NewProduct(form))
 		return
 	}
 
 	http.Redirect(w, r, fmt.Sprintf("/foodProducts/%d", newProductID), http.StatusFound)
 }
 
-func paramsFromForm(fetch func(key string) string) (foodproducts.CreateRequest, error) {
-	reqData := foodproducts.CreateRequest{
-		Name: fetch("name"),
+func paramsFromForm(fetch func(key string) string) (foodproducts.ProductForm, error) {
+	form := foodproducts.ProductForm{
+		FoodProduct: foodproducts.FoodProduct{
+			Name: fetch("name"),
+		},
+		Errors: map[string]string{},
 	}
 
 	calories64, err := strconv.ParseFloat(fetch("calories"), 32)
 	if err != nil {
-		return reqData, err
+		return form, err
 	}
-	reqData.Calories = float32(calories64)
-
-	per64, err := strconv.ParseFloat(fetch("per"), 32)
-	if err != nil {
-		return reqData, err
-	}
-	reqData.Per = float32(per64)
+	form.Calories = float32(calories64)
 
 	proteins64, err := strconv.ParseFloat(fetch("proteins"), 32)
 	if err != nil {
-		return reqData, err
+		return form, err
 	}
-	reqData.Proteins = float32(proteins64)
+	form.Proteins = float32(proteins64)
 
 	fats64, err := strconv.ParseFloat(fetch("fats"), 32)
 	if err != nil {
-		return reqData, err
+		return form, err
 	}
-	reqData.Fats = float32(fats64)
+	form.Fats = float32(fats64)
 
 	carbs64, err := strconv.ParseFloat(fetch("carbs"), 32)
 	if err != nil {
-		return reqData, err
+		return form, err
 	}
-	reqData.Carbs = float32(carbs64)
+	form.Carbs = float32(carbs64)
 
-	return reqData, nil
+	per64, err := strconv.ParseFloat(fetch("per"), 32)
+	if err != nil {
+		return form, err
+	}
+	form.Per = float32(per64)
+
+	return form, nil
 }

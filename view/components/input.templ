@@ -1,9 +1,9 @@
 package components
 
-templ Input(typ, name, value, err string) {
+templ FormControl(name, label, err string) {
 	<div class="form-control">
-		<label>{ name }</label>
-		<input type={ typ } name={ name } value={ value } />
+		<label for={ name }>{ label }</label>
+		<div>{ children... }</div>
 
 		if err != "" {
 			<div class="error">{ err }</div>

@@ -8,8 +8,9 @@ import (
 )
 
 func (api *API) New(w http.ResponseWriter, r *http.Request) {
-	form := foodproducts.CreateResponse{
-		CreateRequest: foodproducts.CreateRequest{Per: 100.0},
+	form := foodproducts.ProductForm{
+		FoodProduct: foodproducts.FoodProduct{},
+		Per:         100,
 	}
 
 	api.Render(w, r, view.NewProduct(form))

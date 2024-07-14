@@ -23,8 +23,11 @@ func Routes(db *pgxpool.Pool, logger *log.Logger) *http.ServeMux {
 
 	authSvc := auth.NewService(logger, db, providersRepo, usersRepo)
 
+	baseHandler := pyra.API{
+		UserSvc: usersRepo,
+	}
 	authHandler := authAPI.NewAPI(authSvc)
-	foodProductsHandler := foodProductsAPI.NewAPI(pyra.API{}, foodProductRepo)
+	foodProductsHandler := foodProductsAPI.NewAPI(baseHandler, foodProductRepo)
 
 	mux.HandleFunc("/", rootHandler)
 

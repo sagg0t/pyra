@@ -19,7 +19,7 @@ type foodProductsRepo struct {
 	db *pgxpool.Pool
 }
 
-func NewDB(db *pgxpool.Pool) FoodProductsRepository {
+func NewRepository(db *pgxpool.Pool) FoodProductsRepository {
 	return &foodProductsRepo{
 		db: db,
 	}

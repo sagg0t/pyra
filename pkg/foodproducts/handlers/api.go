@@ -14,8 +14,9 @@ type API struct {
 	svc foodproducts.FoodProductsRepository
 }
 
-func NewAPI(svc foodproducts.FoodProductsRepository) *API {
+func NewAPI(base pyra.API, svc foodproducts.FoodProductsRepository) *API {
 	return &API{
+		API: base,
 		svc: svc,
 	}
 }

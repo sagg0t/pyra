@@ -45,6 +45,14 @@ migrate_version: migrate_build
 
 # END MIGRATE
 
+# AIR
+
+.PHONY: air_build
+air_build:
+	@go build -o ./tmp/bin/air ./deps/air
+
+# END AIR
+
 .PHONY: seed
 seed:
 	@go run ./database/seeds
@@ -58,3 +66,7 @@ clean:
 .PHONY: dev
 dev:
 	@air
+
+.PHONY: scratch
+scratch:
+	@go run ./cmd/scratch

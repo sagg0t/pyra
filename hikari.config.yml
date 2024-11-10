@@ -1,0 +1,150 @@
+# shared/reusable types.
+# To use a shared type it must be referencd `as: <name>`
+#  so with the example type it would be `as: severity`
+types:
+  - name: timestamp
+    type: time
+    fg: hi-black
+  - name: severity
+    variants:
+    - { value: TRACE, replace: TRC, fg: white }
+    - { value: DEBUG, replace: DBG, fg: magenta }
+    - { value: INFO, replace: INF, fg: blue }
+    - { value: WARN, replace: WRN, fg: yellow }
+    - { value: ERROR, replace: ERR, fg: red }
+    prefix:
+      literal: "["
+      bold: true
+    postfix:
+      literal: "]"
+      bold: true
+  - name: timing
+    type: duration
+  - name: params
+    inline: true
+
+# type of events and scheme of their rendering
+events:
+  - name: ReqLog
+    matcher:
+      event: RequestLog
+    scheme:
+      - { name: severity, as: severity }
+      - literal: " "
+      - { name: ts, as: timestamp }
+      - literal: " "
+      - name: status
+        variants:
+        - { min: 100, max: 199, fg: white, bold: true }
+        - { min: 200, max: 299, fg: green, bold: true }
+        - { min: 300, max: 399, fg: blue, bold: true }
+        - { min: 400, max: 499, fg: yellow, bold: true }
+        - { min: 500, max: 599, fg: red, bold: true }
+      - literal: " "
+      - name: method
+        variants:
+        - { value: GET, fg: white, bold: true }
+        - { value: POST, fg: blue, bold: true }
+        - { value: PUT, fg: yellow, bold: true }
+        - { value: DELETE, fg: red, bold: true }
+      - literal: " "
+      - name: path
+      - literal: " "
+      - name: took
+        type: duration
+        bold: true
+      - literal: " "
+      - name: location
+        optional: true
+        prefix: "to: "
+      - literal: " "
+      - name: params
+        as: params
+      - name: event
+        skip: true
+      - name: msg
+        skip: true
+      - name: traceId
+        skip: true
+  - name: ServerStart
+    matcher:
+      event: ServerStart
+    scheme:
+      - { name: severity, as: severity }
+      - literal: " "
+      - { name: ts, as: timestamp }
+      - literal: " "
+      - name: ip
+        fg: cyan
+        bold: true
+      - literal: ":"
+        fg: cyan
+        bold: true
+      - name: port
+        fg: cyan
+        bold: true
+      - literal: " "
+      - name: event
+        fg: blue
+      - { name: msg, skip: true }
+  - name: ServerShutdown
+    matcher:
+      event: ServerShutdown
+    scheme:
+      - name: severity
+        as: severity
+      - literal: " "
+      - name: ts
+        as: timestamp
+      - literal: " "
+      - name: event
+        fg: blue
+      - name: msg
+        skip: true
+
+  - name: ServerStop
+    matcher:
+      event: ServerStop
+    scheme:
+      - { name: severity, as: severity }
+      - literal: " "
+      - { name: ts, as: timestamp }
+      - literal: " "
+      - name: event
+        fg: blue
+      - name: msg
+        skip: true
+  - name: DBTrace
+    matcher:
+      event: DBTrace
+    scheme:
+      - { name: severity, as: severity }
+      - literal: " "
+      - { name: ts, as: timestamp }
+      - literal: " "
+      - { name: query, fg: magenta, bold: true }
+      - literal: " "
+      - name: args
+        optional: true
+        prefix: "["
+        postfix: "]"
+      - literal: " "
+      - name: took
+        fg: white
+        bold: true
+      - literal: " "
+      - name: error
+        optional: true
+      - name: event
+        skip: true
+
+  - name: Default
+    matcher:
+      msg:
+        filled: true
+    scheme:
+      - { name: severity, as: severity }
+      - literal: " "
+      - { name: ts, as: timestamp }
+      - literal: " "
+      - name: msg

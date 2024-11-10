@@ -7,6 +7,8 @@ import (
 
 	"pyra/pkg/auth"
 	authAPI "pyra/pkg/auth/handlers"
+	"pyra/pkg/dishes"
+	dishAPI "pyra/pkg/dishes/handlers"
 	"pyra/pkg/foodproducts"
 	foodProductsAPI "pyra/pkg/foodproducts/handlers"
 	"pyra/pkg/log"
@@ -20,6 +22,7 @@ func Routes(db *pgxpool.Pool, logger *log.Logger) *http.ServeMux {
 	usersRepo := users.NewRepository(db)
 	providersRepo := auth.NewProviderRepository(db)
 	foodProductRepo := foodproducts.NewRepository(db)
+	dishesRepo := dishes.NewRepository(db)
 
 	authSvc := auth.NewService(logger, db, providersRepo, usersRepo)
 
@@ -28,6 +31,7 @@ func Routes(db *pgxpool.Pool, logger *log.Logger) *http.ServeMux {
 	}
 	authHandler := authAPI.NewAPI(authSvc)
 	foodProductsHandler := foodProductsAPI.NewAPI(baseHandler, foodProductRepo)
+	dishesHandler := dishAPI.NewAPI(baseHandler, dishesRepo, foodProductRepo)
 
 	mux.HandleFunc("/", rootHandler)
 
@@ -43,14 +47,23 @@ func Routes(db *pgxpool.Pool, logger *log.Logger) *http.ServeMux {
 	mux.Handle("POST /foodProducts", auth.Authenticated(foodProductsHandler.Create))
 	mux.Handle("PUT /foodProducts/{id}", auth.Authenticated(foodProductsHandler.Update))
 	mux.Handle("DELETE /foodProducts/{id}", auth.Authenticated(foodProductsHandler.Delete))
+	mux.Handle("POST /foodProducts/search", http.HandlerFunc(foodProductsHandler.Search))
+
+	mux.Handle("GET /dishes", auth.Authenticated(dishesHandler.List))
+	mux.Handle("GET /dishes/{id}", auth.Authenticated(dishesHandler.Details))
+	mux.Handle("GET /dishes/new", auth.Authenticated(dishesHandler.NewDish))
 
 	return mux
 }
 
 func rootHandler(w http.ResponseWriter, r *http.Request) {
-	if auth.IsAuthenticated(r) {
-		http.Redirect(w, r, "/foodProducts", http.StatusSeeOther)
+	if r.URL.Path == "/" {
+		if auth.IsAuthenticated(r) {
+			http.Redirect(w, r, "/foodProducts", http.StatusSeeOther)
+		} else {
+			http.Redirect(w, r, "/signIn", http.StatusTemporaryRedirect)
+		}
 	} else {
-		http.Redirect(w, r, "/signIn", http.StatusTemporaryRedirect)
+		http.NotFound(w, r)
 	}
 }

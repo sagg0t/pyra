@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"log/slog"
+	"os"
 )
 
 type Level slog.Level
@@ -16,18 +17,36 @@ const (
 	LevelError Level = Level(slog.LevelError)
 )
 
-func init() {
-	slog.SetLogLoggerLevel(slog.Level(LevelDebug))
-}
-
 type Logger struct {
 	slogger *slog.Logger
 }
 
 func NewLogger() *Logger {
 	return &Logger{
-		slogger: slog.Default(),
-		// slogger: slog.New(slog.NewTextHandler(os.Stderr, nil)),
+		slogger: slog.New(slog.NewTextHandler(os.Stderr, &slog.HandlerOptions{
+			Level: slog.Level(LevelDebug),
+			ReplaceAttr: func(groups []string, a slog.Attr) slog.Attr {
+				if a.Key == slog.TimeKey {
+					return slog.Attr{Key: "ts", Value: a.Value}
+				}
+
+				if a.Key == slog.LevelKey {
+					attr := slog.Attr{Key: "severity"}
+
+					level := a.Value.Any().(slog.Level)
+					switch {
+					case level == slog.Level(LevelTrace):
+						attr.Value = slog.StringValue("TRACE")
+					default:
+						attr.Value = slog.StringValue(level.String())
+					}
+
+					return attr
+				}
+
+				return a
+			},
+		})),
 	}
 }
 

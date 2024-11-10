@@ -7,5 +7,6 @@ const (
 	ServerShutdownEvent = "ServerShutdown"
 	ServerStopEvent     = "ServerStop"
 	PanicEvent          = "Panic"
-	Request             = "Request"
+	RequestEvent        = "RequestLog"
+	DBTraceEvent        = "DBTrace"
 )

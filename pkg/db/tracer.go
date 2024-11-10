@@ -43,7 +43,8 @@ func (t *QueryTracer) TraceQueryEnd(ctx context.Context, conn *pgx.Conn, data pg
 
 	t.log.TraceContext(
 		ctx,
-		"DB query",
+		"",
+		"event", log.DBTraceEvent,
 		"query", startData.SQL,
 		"args", startData.Args,
 		"took", took,

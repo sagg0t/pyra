@@ -8,13 +8,15 @@ templ Auth() {
 
 			<meta name="viewport" content="width=device-width,initial-scale=1">
 
-			//<link rel="stylesheet" href="/assets/pyra.css">
-			//<script src="/assets/main.js" defer></script>
+			<link rel="stylesheet" href="/assets/pyra.css">
+			<script src="/assets/main.js" defer></script>
 		</head>
 
 		<body>
 			<main id="main-content">
-				{ children... }
+				<div class="flex flex-col justify-center items-center">
+					{ children... }
+				</div>
 			</main>
 		</body>
 	</html>

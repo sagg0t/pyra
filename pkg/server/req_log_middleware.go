@@ -43,7 +43,8 @@ func Logger(logger *log.Logger, f http.Handler) http.Handler {
 		endT := time.Now()
 		took := endT.Sub(startT)
 
-		l.Info("req",
+		l.Info("",
+			"event", log.RequestEvent,
 			"status", ww.StatusCode(),
 			"method", r.Method,
 			"path", r.URL.Path,

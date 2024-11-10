@@ -54,9 +54,8 @@ func IsAuthenticated(r *http.Request) bool {
 
 	userId, ok := s.Values[UserIDSessionKey]
 
-	log.Debug("IsAuthenticated", "value", ok)
 	if ok {
-		log.Debug("userId", "id", userId.(string))
+		log.Debug("USER_ID", "id", userId.(uint64))
 	}
 
 	return ok

@@ -10,6 +10,7 @@ import (
 	"pyra/pkg/log"
 	"pyra/pkg/session"
 	"pyra/pkg/users"
+	"pyra/view"
 )
 
 var ErrNoUsesr = errors.New("no current user")
@@ -27,7 +28,7 @@ func (api *API) Session(r *http.Request) *session.Session {
 }
 
 func (api *API) NotFound(w http.ResponseWriter, r *http.Request) {
-	http.NotFound(w, r)
+	api.Render(w, r, view.NotFound())
 }
 
 func (api *API) InternalServerError(w http.ResponseWriter) {

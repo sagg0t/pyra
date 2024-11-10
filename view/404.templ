@@ -1,0 +1,38 @@
+package view
+
+templ NotFound() {
+	<!DOCTYPE html>
+	<html>
+		<head>
+			<title>Oooops - Pyra</title>
+
+			<meta name="viewport" content="width=device-width,initial-scale=1">
+
+			<link rel="stylesheet" href="/assets/pyra.css">
+		</head>
+
+		<body class="flex flex-col justify-center items-center">
+			<h1
+				class="text-[12rem] leading-none font-bold text-yellow-50 shadow-emerald-400"
+				style="text-shadow: var(--tw-shadow-color) 5px 5px"
+			>
+				404
+			</h1>
+
+			<h3
+				class="text-6xl font-bold my-8 text-emerald-400 shadow-yellow-50"
+				style="text-shadow: var(--tw-shadow-color) 3px 3px"
+			>
+				Ooops...
+			</h3>
+
+			<p class="text-2xl text-emerald-400">
+				Looks like the page you're looking for doesn't exist
+			</p>
+
+			<a href="/" class="text-xl font-bold text-emerald-400 mt-12 underline underline-offset-4">
+				Go Home
+			</a>
+		</body>
+	</html>
+}

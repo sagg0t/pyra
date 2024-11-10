@@ -1,0 +1,115 @@
+package view
+
+import (
+	"pyra/pkg/dishes"
+	"pyra/view/components"
+	"pyra/view/layout"
+)
+
+templ NewDish(form dishes.DishForm) {
+	@layout.Pyra() {
+		@components.Header() {
+			<div class="flex justify-between w-full">
+				<h1>Add a Dish</h1>
+				<a href="/dishes" class="link-primary">
+					List
+				</a>
+			</div>
+		}
+		<section>
+			<form action="/dishes" method="POST">
+				if err, ok := form.Errors["base"]; ok {
+					<p class="text-red-300">{ err }</p>
+				}
+				<div class="flex flex-col gap-4">
+					@components.FormControl("name", "Name", form.Errors["name"]) {
+						<input
+							type="text"
+							value={ form.Name }
+							name="name"
+							id="name"
+							required
+						/>
+					}
+				</div>
+				<div>
+					<table class="table">
+						<thead>
+							<tr>
+								<th>Product</th>
+								<th>Amount</th>
+								<th>Calories</th>
+								<th>Proteins</th>
+								<th>Fats</th>
+								<th>Carbs</th>
+								<th></th>
+							</tr>
+						</thead>
+
+						<template id="product-row-template">
+							@productRow()
+						</template>
+
+						<datalist id="productSearchDatalist">
+						</datalist>
+
+						<tbody>
+							@productRow()
+						</tbody>
+					</table>
+				</div>
+			</form>
+		</section>
+	}
+}
+
+templ productRow() {
+	<tr
+		class="group"
+		data-controller="product-row"
+		data-product-row-is-last-value="true"
+	>
+		<td>
+			@searchInput()
+		</td>
+		<td>
+			@amountInput()
+		</td>
+		<td data-product-row-target="calories"></td>
+		<td data-product-row-target="proteins"></td>
+		<td data-product-row-target="fats"></td>
+		<td data-product-row-target="carbs"></td>
+		<td>
+			<button
+				type="button"
+				tabindex="-1"
+				class="group-data-[product-row-is-last-value=true]:hidden"
+				data-action="click->product-row#destroy">
+				X
+			</button>
+		</td>
+	</tr>
+}
+
+templ searchInput() {
+	<div
+		data-controller="product-search"
+		data-action="product-select->product-row#productSelect product-clear->product-row#destroy"
+		data-product-search-datalist-id-value="productSearchDatalist"
+	>
+		<input
+			type="search"
+			list="productSearchDatalist"
+			data-action="input->product-search#searchProducts
+	change->product-search#searchSubmit"
+		/>
+	</div>
+}
+
+templ amountInput() {
+	<div>
+		<input
+			type="number"
+			data-product-row-target="amountInput" />
+	</div>
+}

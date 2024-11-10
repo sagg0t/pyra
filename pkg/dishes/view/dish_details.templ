@@ -1,0 +1,103 @@
+package view
+
+import "fmt"
+import "strconv"
+import "pyra/pkg/dishes"
+import "pyra/pkg/foodproducts"
+import "pyra/view/layout"
+import "pyra/view/components"
+import "pyra/view/utils"
+
+templ DishDetails(dish dishes.Dish, versions []dishes.Dish, products []foodproducts.FoodProduct) {
+	@layout.Pyra() {
+		@components.Header() {
+			<div class="flex justify-between w-full">
+				<div>
+					<h1>{ dish.Name }</h1>
+					<h3 class="text-gray-500">Version: { fmt.Sprint(dish.Version) }</h3>
+				</div>
+
+				<a href="/dishes" class="link-primary">
+					List
+				</a>
+			</div>
+		}
+
+		<section id="dish-details" class="my-8">
+			<table class="table">
+				<thead>
+					<tr>
+						<th>Name</th>
+						<th>Amount</th>
+						<th>Calories</th>
+						<th>Proteins</th>
+						<th>Fats</th>
+						<th>Carbs</th>
+					</tr>
+				</thead>
+
+				<tbody>
+					<tr>
+						<td>Total</td>
+						<td>0</td>
+						<td>{ utils.FormatCompactFloat(dish.Calories) }</td>
+						<td>{ utils.FormatCompactFloat(dish.Proteins) }</td>
+						<td>{ utils.FormatCompactFloat(dish.Fats) }</td>
+						<td>{ utils.FormatCompactFloat(dish.Carbs) }</td>
+					</tr>
+				</tbody>
+
+				<tbody>
+					for _, product := range products {
+						<tr>
+							<td>{ product.Name }</td>
+							<td>0</td>
+							<td>{ utils.FormatCompactFloat(product.Calories) }</td>
+							<td>{ utils.FormatCompactFloat(product.Proteins) }</td>
+							<td>{ utils.FormatCompactFloat(product.Fats) }</td>
+							<td>{ utils.FormatCompactFloat(product.Carbs) }</td>
+						</tr>
+					}
+				</tbody>
+			</table>
+		</section>
+
+		<section>
+			<h3 class="section-header">Other Versions</h3>
+			<table class="table">
+				<thead>
+					<tr>
+						<th>Version</th>
+						<th></th>
+						<th>Name</th>
+						<th>Calories</th>
+						<th>Proteins</th>
+						<th>Fats</th>
+						<th>Carbs</th>
+					</tr>
+				</thead>
+
+				<tbody>
+					for _, dishVersion := range versions {
+						<tr>
+							<td>{ strconv.FormatInt(int64(dishVersion.Version), 10) }</td>
+							<td>
+								if dishVersion.Version == dish.Version {
+									<span class="rounded bg-emerald-600 border
+									border-emerald-600 border-x-4">
+										current
+									</span>
+								}
+							</td>
+							<td>{ dish.Name }</td>
+							<td>{ utils.FormatCompactFloat(dishVersion.Calories) }</td>
+							<td>{ utils.FormatCompactFloat(dishVersion.Proteins) }</td>
+							<td>{ utils.FormatCompactFloat(dishVersion.Fats) }</td>
+							<td>{ utils.FormatCompactFloat(dishVersion.Carbs) }</td>
+						</tr>
+					}
+				</tbody>
+			</table>
+		</section>
+	}
+}

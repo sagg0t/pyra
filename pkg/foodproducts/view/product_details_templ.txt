@@ -1,7 +1,0 @@
-<div class=\"flex justify-between w-full\"><h1>
-</h1><a href=\"/foodProducts\" class=\"link-primary\">List</a></div>
- <section id=\"product-details\" class=\"mb-8\"><table><tbody><tr><td>Calories</td><td>
-</td></tr><tr><td>Proteins</td><td>
-</td></tr><tr><td>Fats</td><td>
-</td></tr><tr><td>Carbs</td><td>
-</td></tr></tbody></table></section><section><h3 class=\"section-header\">Product references...</h3></section>

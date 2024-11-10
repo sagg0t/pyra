@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	stdlog "log"
+	"log/slog"
 	"net"
 	"net/http"
 	"time"
@@ -60,9 +60,8 @@ func (s *Server) Start(ctx context.Context, handler http.Handler) error {
 		ReadTimeout:       10 * time.Second,
 		ReadHeaderTimeout: 5 * time.Second,
 		IdleTimeout:       2 * time.Second,
-		// FIX: pass a real error logger
-		ErrorLog: stdlog.Default(),
-		Handler:  handler,
+		ErrorLog:          slog.NewLogLogger(s.log.Handler(), slog.LevelDebug),
+		Handler:           handler,
 	}
 
 	errCh := make(chan error, 1)

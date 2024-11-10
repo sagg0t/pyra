@@ -1,4 +1,4 @@
-#product-list {
+#product-list, #dishes-list, .table {
     width: 100%;
 
     td, th {
@@ -9,6 +9,10 @@
         .actions {
             @apply flex gap-3;
         }
+    }
+
+    th {
+        @apply text-sm uppercase;
     }
 
     td:first-child, th:first-child {

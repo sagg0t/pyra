@@ -1,0 +1,44 @@
+{{ define "food-product-details" }}
+{{ template "layout" . }}
+{{ end }}
+
+{{ define "content" }}
+<header id="main-header">
+    <div class="flex justify-between w-full">
+        <h1>{{ .Name }}</h1>
+        <a href="/foodProducts" class="link-primary">
+            List
+        </a>
+    </div>
+</header>
+
+<section id="product-details" class="mb-8">
+    <table>
+        <tbody>
+            <tr>
+                <td>Calories</td>
+                <td>{{ compactFloat .Calories }}</td>
+            </tr>
+
+            <tr>
+                <td>Proteins</td>
+                <td>{{ compactFloat .Proteins }}</td>
+            </tr>
+
+            <tr>
+                <td>Fats</td>
+                <td>{{ compactFloat .Fats }}</td>
+            </tr>
+
+            <tr>
+                <td>Carbs</td>
+                <td>{{ compactFloat .Carbs }}</td>
+            </tr>
+        </tbody>
+    </table>
+</section>
+
+<section>
+    <h3 class="section-header">Product references...</h3>
+</section>
+{{ end }}

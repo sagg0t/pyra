@@ -1,0 +1,95 @@
+{{ define "dish-details" }}
+{{ template "layout" . }}
+{{ end }}
+
+{{ define "content" }}
+<header id="main-header">
+    <div class="flex justify-between w-full">
+        <div>
+            <h1>{{ .Dish.Name }}</h1>
+            <h3 class="text-gray-500">Version: {{ .Dish.Version }}</h3>
+        </div>
+
+        <a href="/dishes" class="link-primary">
+            List
+        </a>
+    </div>
+</header>
+
+<section id="dish-details" class="my-8">
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Amount</th>
+                <th>Calories</th>
+                <th>Proteins</th>
+                <th>Fats</th>
+                <th>Carbs</th>
+            </tr>
+        </thead>
+
+        <tbody>
+            <tr>
+                <td>Total</td>
+                <td>0</td>
+                <td>{{ compactFloat .Dish.Calories }}</td>
+                <td>{{ compactFloat .Dish.Proteins }}</td>
+                <td>{{ compactFloat .Dish.Fats }}</td>
+                <td>{{ compactFloat .Dish.Carbs }}</td>
+            </tr>
+        </tbody>
+
+        <tbody>
+            {{ range .Products }}
+                <tr>
+                    <td>{{ .Name }}</td>
+                    <td>0</td>
+                    <td>{{ compactFloat .Calories }}</td>
+                    <td>{{ compactFloat .Proteins }}</td>
+                    <td>{{ compactFloat .Fats }}</td>
+                    <td>{{ compactFloat .Carbs }}</td>
+                </tr>
+            {{ end }}
+        </tbody>
+    </table>
+</section>
+
+<section>
+    <h3 class="section-header">Other Versions</h3>
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Version</th>
+                <th></th>
+                <th>Name</th>
+                <th>Calories</th>
+                <th>Proteins</th>
+                <th>Fats</th>
+                <th>Carbs</th>
+            </tr>
+        </thead>
+
+        <tbody>
+            {{ range .Versions }}
+                <tr>
+                    <td>{{ .Version }}</td>
+                    <td>
+                        {{ if eq .Version $.Dish.Version}}
+                            <span class="rounded bg-emerald-600 border
+                            border-emerald-600 border-x-4">
+                                current
+                            </span>
+                        {{ end }}
+                    </td>
+                    <td>{{ .Name }}</td>
+                    <td>{{ compactFloat .Calories }}</td>
+                    <td>{{ compactFloat .Proteins }}</td>
+                    <td>{{ compactFloat .Fats }}</td>
+                    <td>{{ compactFloat .Carbs }}</td>
+                </tr>
+            {{ end }}
+        </tbody>
+    </table>
+</section>
+{{ end }}

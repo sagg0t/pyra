@@ -1,0 +1,25 @@
+{{ define "layout" }}
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Pyra</title>
+
+        <meta name="viewport" content="width=device-width,initial-scale=1">
+
+        <link rel="stylesheet" href="/assets/pyra.css">
+        <script src="/assets/main.js" defer></script>
+    </head>
+
+    <body>
+        <div id="page-frame">
+            <div class="navigation-wrapper">
+                {{ template "sidebar" . }}
+            </div>
+
+            <main id="main-content">
+                {{ template "content" . }}
+            </main>
+        </div>
+    </body>
+</html>
+{{ end }}

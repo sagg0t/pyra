@@ -10,7 +10,7 @@ import (
 
 	_ "github.com/joho/godotenv/autoload"
 
-	"pyra/pkg/api"
+	"pyra/internal/api"
 	"pyra/pkg/db"
 	"pyra/pkg/log"
 	"pyra/pkg/server"
@@ -45,8 +45,9 @@ func main() {
 		rootLogger.Error("failed to create a DB pool", "error", err)
 		os.Exit(1)
 	}
+	_ = dbPool
 
-	mux := api.Routes(dbPool, rootLogger)
+	mux := api.Mux(dbPool, rootLogger)
 
 	staticFs := http.FileServerFS(os.DirFS("./public/assets"))
 	mux.Handle("/assets/", http.StripPrefix("/assets/", staticFs))

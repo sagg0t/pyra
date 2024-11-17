@@ -1,0 +1,89 @@
+{{ define "new-food-product" }}
+{{ template "layout" . }}
+{{ end }}
+
+{{ define "content" }}
+<header id="main-header">
+    <div class="flex justify-between w-full">
+        <h1>Add a Product</h1>
+        <a href="/foodProducts" class="link-primary">
+            List
+        </a>
+    </div>
+</header>
+
+<section>
+	<form action="/foodProducts" method="POST">
+        {{ if and .Errors (index .Errors "base") }}
+            <p class="text-red-300">{{ index .Errors "base" }}</p>
+		{{ end }}
+
+		<div class="flex flex-col items-start gap-4">
+            {{ template "input" inputData
+                "Type" "text"
+                "Name" "name"
+                "Label" "Name"
+                "Value" .Name
+                "ID" "name"
+                "Required" true
+                "Error" (and .Errors (index .Errors "name")) }}
+
+			<div class="flex gap-2">
+                {{ template "input" inputData
+                    "Name" "calories"
+                    "Type" "number"
+                    "Label" "Calories"
+                    "Value" (compactFloat .Calories)
+                    "ID" "calories"
+                    "Placeholder" "0"
+                    "Required" true
+                    "Error" (and .Errors (index .Errors "calories")) }}
+
+                {{ template "input" inputData
+                    "Name" "per"
+                    "Type" "number"
+                    "Label" "Per"
+                    "Value" (compactFloat .Per)
+                    "ID" "per"
+                    "Placeholder" "100"
+                    "Required" true
+                    "Error" (and .Errors (index .Errors "Per")) }}
+			</div>
+			<div class="macros flex gap-2">
+                {{ template "input" inputData
+                    "Name" "proteins"
+                    "Type" "number"
+                    "Label" "Proteins"
+                    "Value" (compactFloat .Proteins)
+                    "ID" "proteins"
+                    "Placeholder" "0"
+                    "Required" true
+                    "Error" (and .Errors (index .Errors "proteins")) }}
+
+                {{ template "input" inputData
+                    "Name" "fats"
+                    "Type" "number"
+                    "Label" "Fats"
+                    "Value" (compactFloat .Fats)
+                    "ID" "fats"
+                    "Placeholder" "0"
+                    "Required" true
+                    "Error" (and .Errors (index .Errors "fats")) }}
+
+                {{ template "input" inputData
+                    "Name" "carbs"
+                    "Type" "number"
+                    "Label" "Carbs"
+                    "Value" (compactFloat .Carbs)
+                    "ID" "carbs"
+                    "Placeholder" "0"
+                    "Required" true
+                    "Error" (and .Errors (index .Errors "carbs")) }}
+			</div>
+			<button type="submit" class="btn-secondary">
+				Submit
+			</button>
+		</div>
+	</form>
+</section>
+{{ end }}

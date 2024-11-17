@@ -1,0 +1,88 @@
+{{ define "new-dish" }}
+{{ template "layout" . }}
+{{ end }}
+
+{{ define "content" }}
+<header id="main-header">
+    <div class="flex justify-between w-full">
+        <h1>Add a Dish</h1>
+        <a href="/dishes" class="link-primary">
+            List
+        </a>
+    </div>
+</header>
+
+<section>
+    <form action="/dishes" method="POST">
+        {{ if and .Errors (index .Errors "base") }}
+            <p class="text-red-300">{{ index .Errors "base" }}</p>
+		{{ end }}
+
+        <div class="flex flex-col gap-4">
+            {{ template "input" inputData
+                "Type" "text"
+                "Name" "name"
+                "Label" "Name"
+                "Value" .Name
+                "ID" "name"
+                "Required" true
+                "Error" (and .Errors (index .Errors "name")) }}
+        </div>
+        <div>
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Product</th>
+                        <th>Amount</th>
+                        <th>Calories</th>
+                        <th>Proteins</th>
+                        <th>Fats</th>
+                        <th>Carbs</th>
+                        <th></th>
+                    </tr>
+                </thead>
+
+                <template id="product-row-template">
+                    {{ block "product-row" . }}
+                    <tr class="group"
+                        data-controller="product-row"
+                        data-product-row-is-last-value="true">
+                        <td>
+                            <div data-controller="product-search" data-product-search-datalist-id-value="productSearchDatalist"
+                                data-action="product-select->product-row#productSelect product-clear->product-row#destroy">
+                                <input type="search" list="productSearchDatalist"
+                                    data-action="input->product-search#searchProducts change->product-search#searchSubmit" />
+                            </div>
+                        </td>
+                        <td>
+                            <div>
+                                <input type="number" data-product-row-target="amountInput" />
+                            </div>
+                        </td>
+                        <td data-product-row-target="calories"></td>
+                        <td data-product-row-target="proteins"></td>
+                        <td data-product-row-target="fats"></td>
+                        <td data-product-row-target="carbs"></td>
+                        <td>
+                            <button type="button" tabindex="-1"
+                                class="group-data-[product-row-is-last-value=true]:hidden"
+                                data-action="click->product-row#destroy">
+                                X
+                            </button>
+                        </td>
+                    </tr>
+                    {{ end }}
+                </template>
+
+                <datalist id="productSearchDatalist">
+                </datalist>
+
+                <tbody>
+                    {{ template "product-row" }}
+                </tbody>
+            </table>
+        </div>
+    </form>
+</section>
+{{ end }}
+

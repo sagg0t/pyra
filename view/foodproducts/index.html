@@ -1,0 +1,60 @@
+{{ define "food-product-list" }}
+{{ template "layout" . }}
+{{ end }}
+
+{{ define "content" }}
+<header id="main-header">
+    <div class="flex justify-between">
+        <h1>Products</h1>
+
+        <a href="/foodProducts/new">
+            <button type="button" class="btn-primary">
+                Add
+            </button>
+        </a>
+    </div>
+</header>
+
+<table id="product-list">
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Calories</th>
+            <th>Proteins</th>
+            <th>Fats</th>
+            <th>Carbs</th>
+            <th></th>
+        </tr>
+    </thead>
+
+    <tbody hx-confirm="Are you sure?" hx-target="closest tr" hx-swap="outerHTML">
+        {{ range . }}
+            <tr>
+                <td>
+                    <a href="{{ foodProductURI .ID }}" class="link-primary">
+                        {{ .Name }}
+                    </a>
+                </td>
+                <td>{{ compactFloat .Calories }}</td>
+                <td>{{ compactFloat .Proteins }}</td>
+                <td>{{ compactFloat .Fats }}</td>
+                <td>{{ compactFloat .Carbs }}</td>
+                <td>
+                    <ul class="actions">
+                        <li>
+                            <a href="{{ editFoodProductURI .ID }}" class="link-secondary">
+                                Edit
+                            </a>
+                        </li>
+                        <li>
+                            <span hx-delete="{{ foodProductURI .ID }}" class="link-secondary">
+                                Delete
+                            </span>
+                        </li>
+                    </ul>
+                </td>
+            </tr>
+        {{ end }}
+    </tbody>
+</table>
+{{ end }}

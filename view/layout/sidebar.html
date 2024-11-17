@@ -1,0 +1,23 @@
+{{ define "sidebar" }}
+<nav class="h-full flex flex-col justify-between">
+    <ul>
+        <li>
+            <a href="#">Menu</a>
+        </li>
+
+        <li>
+            <a href="/foodProducts">Products</a>
+        </li>
+
+        <li class="active">
+            <a href="/dishes">Dishes</a>
+        </li>
+    </ul>
+
+    <ul>
+        <li>
+            <span hx-post="/signOut" class="link-primary">Sign Out</span>
+        </li>
+    </ul>
+</nav>
+{{ end }}

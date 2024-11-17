@@ -1,0 +1,52 @@
+{{ define "dish-list" }}
+{{ template "layout" . }}
+{{ end }}
+
+{{ define "content" }}
+<header id="main-header">
+    <div class="flex justify-between">
+        <h1>Dishes</h1>
+
+        <a href="/dishes/new">
+            <button type="button" class="btn-primary">
+                Add
+            </button>
+        </a>
+    </div>
+</header>
+
+<section>
+    <table id="dishes-list">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Calories</th>
+                <th>Proteins</th>
+                <th>Fats</th>
+                <th>Carbs</th>
+            </tr>
+        </thead>
+
+        <tbody>
+            {{ range . }}
+                <tr>
+                    <td>
+                        <a href="{{ dishURI .ID }}"
+                        class="link-primary">
+                            {{ .Name }}
+                        </a>
+                    </td>
+                    <td>{{ compactFloat .Calories }}</td>
+                    <td>{{ compactFloat .Proteins }}</td>
+                    <td>{{ compactFloat .Fats }}</td>
+                    <td>{{ compactFloat .Carbs }}</td>
+                </tr>
+            {{ else }}
+                <tr>
+                    <td>None so far...</td>
+                </tr>
+            {{ end }}
+        </tbody>
+    </table>
+</section>
+{{ end }}

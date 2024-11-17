@@ -1,7 +1,6 @@
 package auth
 
 import (
-	"context"
 	"time"
 )
 
@@ -20,11 +19,6 @@ type Provider struct {
 
 	CreatedAt time.Time
 	UpdatedAt time.Time
-}
-
-type AuthProvidersRepository interface {
-	Find(ctx context.Context, name, uid string) (Provider, error)
-	Create(ctx context.Context, userId uint64, name, uid string) (uint64, error)
 }
 
 type GoogleUser struct {

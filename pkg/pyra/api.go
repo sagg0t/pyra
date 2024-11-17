@@ -2,6 +2,7 @@ package pyra
 
 import (
 	"errors"
+	"html/template"
 	"net/http"
 
 	"github.com/a-h/templ"
@@ -10,31 +11,42 @@ import (
 	"pyra/pkg/log"
 	"pyra/pkg/session"
 	"pyra/pkg/users"
-	"pyra/view"
 )
 
 var ErrNoUsesr = errors.New("no current user")
 
 type API struct {
-	UserSvc users.UserRepository
+	templateDrivers *template.Template
+	UserSvc         users.UserRepository
 }
 
+func NewAPI(t *template.Template) *API {
+	return &API{
+		templateDrivers: t,
+	}
+}
+
+// INFO: done
 func (api *API) RequestLogger(r *http.Request) *log.Logger {
 	return log.FromContext(r.Context())
 }
 
+// INFO: done
 func (api *API) Session(r *http.Request) *session.Session {
 	return session.FromContext(r.Context())
 }
 
+// INFO: done
 func (api *API) NotFound(w http.ResponseWriter, r *http.Request) {
-	api.Render(w, r, view.NotFound())
+	api.templateDrivers.ExecuteTemplate(w, "not-found-error", nil)
 }
 
+// INFO: done
 func (api *API) InternalServerError(w http.ResponseWriter) {
 	http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 }
 
+// INFO: done
 func (api *API) Render(w http.ResponseWriter, r *http.Request, comp templ.Component) {
 	ctx := r.Context()
 
@@ -45,6 +57,7 @@ func (api *API) Render(w http.ResponseWriter, r *http.Request, comp templ.Compon
 	}
 }
 
+// INFO: done
 func (api *API) CurrentUser(r *http.Request) (*users.User, error) {
 	s := api.Session(r)
 	userId, ok := s.Values[auth.UserIDSessionKey]
@@ -58,9 +71,4 @@ func (api *API) CurrentUser(r *http.Request) (*users.User, error) {
 	}
 
 	return &user, nil
-}
-
-type RenderContext struct {
-	User     *users.User
-	UserPath []string
 }

@@ -1,5 +1,5 @@
 import { Controller } from "@hotwired/stimulus";
-import type { ProductSelectEvent } from "./product_search_controller";
+import type { SearchConfirmEvent } from "./search_bar_controller";
 import type { Product } from "../types/product";
 import { assert } from "../assert";
 
@@ -24,19 +24,23 @@ export class ProductRowController extends Controller {
     declare readonly fatsTarget: HTMLElement;
     declare readonly carbsTarget: HTMLElement;
 
-    productSelect(e: ProductSelectEvent) {
-        const product: Product = e.detail;
+    declare product: Product | null;
 
-        this.amountInputTarget.value = (100).toString();
-        this.caloriesTarget.innerText = product.calories.toString();
-        this.proteinsTarget.innerText = product.proteins.toString();
-        this.fatsTarget.innerText = product.fats.toString();
-        this.carbsTarget.innerText = product.carbs.toString();
+    connect() {
+        this.product = null;
+    }
+
+    selectProduct(e: SearchConfirmEvent) {
+        this.product = e.detail as Product;
+
+        this.updateMacros();
 
         if (this.isLastValue) {
             this.isLastValue = false;
             this.appendNextRow();
         }
+
+        this.amountInputTarget.focus();
     }
 
     appendNextRow() {
@@ -47,7 +51,19 @@ export class ProductRowController extends Controller {
         this.element.parentElement?.appendChild(newRow);
     }
 
-    destroy() {
+    updateMacros(): void {
+        if (!this.product) { return; }
+
+        const ratio = parseInt(this.amountInputTarget.value) / 100.0;
+        const ratioOf = (n: number): string => (ratio * n).toFixed(2);
+
+        this.caloriesTarget.innerText = ratioOf(this.product.calories);
+        this.proteinsTarget.innerText = ratioOf(this.product.proteins);
+        this.fatsTarget.innerText = ratioOf(this.product.fats);
+        this.carbsTarget.innerText = ratioOf(this.product.carbs);
+    }
+
+    destroy(): void {
         if (this.isLastValue) {
             return;
         }

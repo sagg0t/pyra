@@ -1,5 +1,5 @@
 export type Product = {
-    ID: string;
+    id: string;
     calories: number;
     proteins: number;
     fats: number;

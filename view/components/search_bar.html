@@ -1,0 +1,29 @@
+{{ define "search-bar" }}
+<label class="search-bar block relative" data-controller="search-bar"
+    data-search-bar-url-value="{{ .URI }}"
+    data-search-bar-method-value="{{ .Method }}"
+    data-search-bar-empty-list-class="hidden"
+    data-search-bar-selected-option-class="bg-blue-400">
+    <input type="search" class="search-bar__input"
+        {{ if .Name }}name="{{ .Name }}"{{ end }}
+        {{ if .Value }}value="{{ .Value }}"{{ end }}
+        {{ if .Placeholder }}placeholder="{{ .Placeholder }}"{{ end }}
+        {{ if .Required }}reuired{{ end }}
+        {{ if .ID }}id="{{ .ID }}"{{ end }}
+        autocomplete="off"
+        data-search-bar-target="input"
+        data-action="input->search-bar#search
+        keydown.down->search-bar#selectNext:prevent
+        keydown.ctrl+n->search-bar#selectNext:prevent
+        keydown.up->search-bar#selectPrev:prevent
+        keydown.ctrl+p->search-bar#selectPrev:prevent
+        keydown.enter->search-bar#confirm
+        keydown.esc->search-bar#hideOptions
+        focus->search-bar#search
+        click@window->search-bar#lose" />
+
+    <ul class="search-bar__options hidden"
+        data-search-bar-target="options">
+    </ul>
+</label>
+{{ end }}

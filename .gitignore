@@ -2,6 +2,7 @@
 
 /bin/
 /tmp/
+/cmd/scratch/
 
 node_modules/
 /public/assets/

@@ -7,24 +7,18 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-type Repository interface {
-	Index(ctx context.Context) ([]Dish, error)
-	FindByID(ctx context.Context, id uint64) (Dish, error)
-	Versions(ctx context.Context, uid string) ([]Dish, error)
-}
-
-func NewRepository(db *pgxpool.Pool) Repository {
-	return &dishesRepo{
-		db: db,
+func NewRepository(db *pgxpool.Pool) *Repository {
+	return &Repository{
+		DB: db,
 	}
 }
 
-type dishesRepo struct {
-	db *pgxpool.Pool
+type Repository struct {
+	DB *pgxpool.Pool
 }
 
-func (repo *dishesRepo) Index(ctx context.Context) ([]Dish, error) {
-	rows, err := repo.db.Query(ctx, `SELECT
+func (repo *Repository) Index(ctx context.Context) ([]Dish, error) {
+	rows, err := repo.DB.Query(ctx, `SELECT
 	dishes.*
 	FROM dishes
 	INNER JOIN ( SELECT DISTINCT
@@ -47,8 +41,8 @@ func (repo *dishesRepo) Index(ctx context.Context) ([]Dish, error) {
 	return dishes, nil
 }
 
-func (repo *dishesRepo) FindByID(ctx context.Context, id uint64) (Dish, error) {
-	row := repo.db.QueryRow(ctx, "SELECT * FROM dishes WHERE id = $1 LIMIT 1", id)
+func (repo *Repository) FindByID(ctx context.Context, id uint64) (Dish, error) {
+	row := repo.DB.QueryRow(ctx, "SELECT * FROM dishes WHERE id = $1 LIMIT 1", id)
 
 	dish := Dish{}
 
@@ -71,8 +65,29 @@ func (repo *dishesRepo) FindByID(ctx context.Context, id uint64) (Dish, error) {
 	return dish, nil
 }
 
-func (repo *dishesRepo) Versions(ctx context.Context, uid string) ([]Dish, error) {
-	rows, err := repo.db.Query(ctx, "SELECT * FROM dishes WHERE uid = $1 ORDER BY version DESC LIMIT 20", uid)
+func (repo *Repository) Versions(ctx context.Context, uid string) ([]Dish, error) {
+	rows, err := repo.DB.Query(ctx, "SELECT * FROM dishes WHERE uid = $1 ORDER BY version DESC LIMIT 20", uid)
+	if err != nil {
+		return nil, err
+	}
+
+	dishes, err := pgx.CollectRows(rows, pgx.RowToStructByName[Dish])
+	if err != nil {
+		return nil, err
+	}
+
+	return dishes, nil
+}
+
+func (repo *Repository) FindAllByProductID(ctx context.Context, productID uint64) ([]Dish, error) {
+	rows, err := repo.DB.Query(
+		ctx,
+		`SELECT dishes.*
+		FROM dishes
+		INNER JOIN dish_products ON dish_products.dish_id = dishes.id
+		WHERE dish_products.food_product_id = $1;`,
+		productID,
+	)
 	if err != nil {
 		return nil, err
 	}

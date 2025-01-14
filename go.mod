@@ -4,6 +4,7 @@ go 1.22
 
 require (
 	cloud.google.com/go/compute/metadata v0.3.0 // indirect
+	github.com/golang-cz/devslog v0.0.11 // indirect
 	github.com/gorilla/securecookie v1.1.2 // indirect
 	github.com/jackc/pgpassfile v1.0.0 // indirect
 	github.com/jackc/pgservicefile v0.0.0-20240606120523-5a60cdf6a761 // indirect

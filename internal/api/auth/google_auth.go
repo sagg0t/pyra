@@ -14,7 +14,7 @@ import (
 var googleConfig = &oauth2.Config{
 	ClientID:     os.Getenv("GOOGLE_OAUTH2_CLIENT_ID"),
 	ClientSecret: os.Getenv("GOOGLE_OAUTH2_CLIENT_SECRET"),
-	RedirectURL:  "http://localhost:42069/auth/google/callback",
+	RedirectURL:  "http://localhost:3000/auth/google/callback",
 	Scopes: []string{
 		"https://www.googleapis.com/auth/userinfo.email",
 		"https://www.googleapis.com/auth/userinfo.profile",

@@ -1,5 +1,5 @@
 .PHONY: default
-default: pyra_build pyra_run
+default: pyra_build pyra
 
 # PYRA
 

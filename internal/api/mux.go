@@ -51,6 +51,7 @@ func Mux(db *pgxpool.Pool, l *log.Logger) *http.ServeMux {
 	mux.Handle("GET /dishes", base.Authenticated(dishesAPI.Index()))
 	mux.Handle("GET /dishes/{id}", base.Authenticated(dishesAPI.Show()))
 	mux.Handle("GET /dishes/new", base.Authenticated(dishesAPI.New()))
+	mux.Handle("POST /dishes", base.Authenticated(dishesAPI.Create()))
 
 	return mux
 }

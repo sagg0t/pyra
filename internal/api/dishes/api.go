@@ -56,3 +56,15 @@ func (api *API) New() http.Handler {
 		Handler: baseHandler,
 	}
 }
+
+func (api *API) Create() http.Handler {
+	baseHandler := api.NewHandler()
+	err := baseHandler.ExpandTemplate("view/dishes/new.html")
+	if err != nil {
+		panic(err)
+	}
+
+	return &CreateDishHandler{
+		Handler: baseHandler,
+	}
+}

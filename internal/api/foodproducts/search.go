@@ -29,7 +29,16 @@ func (h *SearchFoodProductsHandler) ServeHTTP(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	res, err := json.Marshal(products)
+	searchResults := make([]searchResult, len(products))
+	for idx, product := range products {
+		searchResults[idx] = searchResult{
+			ID:    product.ID,
+			Label: product.Name,
+			Value: product,
+		}
+	}
+
+	res, err := json.Marshal(searchResults)
 	if err != nil {
 		log.Error("failed to marshal products", err)
 		h.InternalServerError(w)
@@ -41,4 +50,10 @@ func (h *SearchFoodProductsHandler) ServeHTTP(w http.ResponseWriter, r *http.Req
 		log.Error("failed to write the response", err)
 		h.InternalServerError(w)
 	}
+}
+
+type searchResult struct {
+	ID    uint64                   `json:"id"`
+	Label string                   `json:"label"`
+	Value foodproducts.FoodProduct `json:"value"`
 }

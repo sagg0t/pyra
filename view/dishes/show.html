@@ -18,7 +18,7 @@
 
 <section id="dish-details" class="my-8">
     <table class="table">
-        <thead>
+        <thead class="uppercase border-b border-white">
             <tr>
                 <th>Name</th>
                 <th>Amount</th>
@@ -43,7 +43,11 @@
         <tbody>
             {{ range .Products }}
                 <tr>
-                    <td>{{ .Name }}</td>
+                    <td>
+                        <a href="/foodProducts/{{ .ID }}" class="link-primary">
+                            {{ .Name }}
+                        </a>
+                    </td>
                     <td>0</td>
                     <td>{{ compactFloat .Calories }}</td>
                     <td>{{ compactFloat .Proteins }}</td>
@@ -56,13 +60,13 @@
 </section>
 
 <section>
-    <h3 class="section-header">Other Versions</h3>
+    <h3 class="section-header">Versions:</h3>
     <table class="table">
         <thead>
-            <tr>
-                <th>Version</th>
-                <th></th>
+            <tr class="uppercase border-b border-white">
                 <th>Name</th>
+                <th></th>
+                <th>Version</th>
                 <th>Calories</th>
                 <th>Proteins</th>
                 <th>Fats</th>
@@ -73,7 +77,11 @@
         <tbody>
             {{ range .Versions }}
                 <tr>
-                    <td>{{ .Version }}</td>
+                    <td>
+                        <a href="/dishes/{{ .ID }}" class="link-primary">
+                            {{ .Name }}
+                        </a>
+                    </td>
                     <td>
                         {{ if eq .Version $.Dish.Version}}
                             <span class="rounded bg-emerald-600 border
@@ -82,7 +90,7 @@
                             </span>
                         {{ end }}
                     </td>
-                    <td>{{ .Name }}</td>
+                    <td>{{ .Version }}</td>
                     <td>{{ compactFloat .Calories }}</td>
                     <td>{{ compactFloat .Proteins }}</td>
                     <td>{{ compactFloat .Fats }}</td>

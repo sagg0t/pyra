@@ -4,20 +4,24 @@ import (
 	"net/http"
 
 	"pyra/internal/api/base"
+	"pyra/pkg/dishes"
 	"pyra/pkg/foodproducts"
 )
 
 type API struct {
 	*base.API
-	repository *foodproducts.FoodProductsRepository
+	repository     *foodproducts.FoodProductsRepository
+	dishRepository *dishes.Repository
 }
 
 func NewAPI(api *base.API) *API {
 	svc := foodproducts.NewRepository(api.DB)
+	dishSvc := dishes.NewRepository(api.DB)
 
 	return &API{
-		API:        api,
-		repository: svc,
+		API:            api,
+		repository:     svc,
+		dishRepository: dishSvc,
 	}
 }
 
@@ -41,9 +45,10 @@ func (api *API) Show() http.Handler {
 		panic(err)
 	}
 
-	return &FoodProductHanler{
+	return &FoodProductHandler{
 		Handler: baseHandler,
 		svc:     api.repository,
+		dishSvc: api.dishRepository,
 	}
 }
 

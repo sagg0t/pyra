@@ -1,19 +1,23 @@
 package foodproducts
 
-import "time"
+import (
+	"time"
+)
 
 type FoodProduct struct {
-	ID uint64
+	ID      uint64 `json:"id"`
+	UID     string `json:"uid"`
+	Version int32  `json:"version"`
 
-	Name string
+	Name string `json:"name"`
 
-	Calories float32
-	Proteins float32
-	Fats     float32
-	Carbs    float32
+	Calories float32 `json:"calories"`
+	Proteins float32 `json:"proteins"`
+	Fats     float32 `json:"fats"`
+	Carbs    float32 `json:"carbs"`
 
-	CreatedAt time.Time
-	UpdatedAt time.Time
+	CreatedAt time.Time `json:""`
+	UpdatedAt time.Time `json:""`
 }
 
 func (fp *FoodProduct) Normalize(per float32) {
@@ -23,4 +27,13 @@ func (fp *FoodProduct) Normalize(per float32) {
 	fp.Proteins *= ratio
 	fp.Fats *= ratio
 	fp.Carbs *= ratio
+}
+
+type FoodProductAttributes struct {
+	Name string `json:"name"`
+
+	Calories float32 `json:"calories"`
+	Proteins float32 `json:"proteins"`
+	Fats     float32 `json:"fats"`
+	Carbs    float32 `json:"carbs"`
 }

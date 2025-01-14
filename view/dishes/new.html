@@ -13,7 +13,7 @@
 </header>
 
 <section>
-    <form action="/dishes" method="POST">
+    <form action="/dishes" method="POST" autocomplete="off">
         {{ if and .Errors (index .Errors "base") }}
             <p class="text-red-300">{{ index .Errors "base" }}</p>
 		{{ end }}
@@ -47,16 +47,19 @@
                     <tr class="group"
                         data-controller="product-row"
                         data-product-row-is-last-value="true">
-                        <td>
-                            <div data-controller="product-search" data-product-search-datalist-id-value="productSearchDatalist"
-                                data-action="product-select->product-row#productSelect product-clear->product-row#destroy">
-                                <input type="search" list="productSearchDatalist"
-                                    data-action="input->product-search#searchProducts change->product-search#searchSubmit" />
-                            </div>
+                        <td data-action="search-confirm->product-row#selectProduct">
+                            {{ template "search-bar" inputData
+                                "URI" "/foodProducts/search"
+                                "Method" "POST"
+                                "Placeholder" "Start typing product name" }}
+
+                            <input type="hidden" name="product" data-product-row-target="productId" />
                         </td>
                         <td>
                             <div>
-                                <input type="number" data-product-row-target="amountInput" />
+                                <input type="number" name="amount"
+                                    data-product-row-target="amountInput"
+                                    data-action="input->product-row#updateMacros change->product-row#updateMacros" />
                             </div>
                         </td>
                         <td data-product-row-target="calories"></td>
@@ -74,14 +77,13 @@
                     {{ end }}
                 </template>
 
-                <datalist id="productSearchDatalist">
-                </datalist>
-
                 <tbody>
                     {{ template "product-row" }}
                 </tbody>
             </table>
         </div>
+
+        <button type="submit">Submit</button>
     </form>
 </section>
 {{ end }}

@@ -5,6 +5,8 @@ import (
 	"encoding/json"
 	"log/slog"
 	"os"
+
+	"github.com/golang-cz/devslog"
 )
 
 type Level slog.Level
@@ -23,28 +25,31 @@ type Logger struct {
 
 func NewLogger() *Logger {
 	return &Logger{
-		slogger: slog.New(slog.NewTextHandler(os.Stderr, &slog.HandlerOptions{
-			Level: slog.Level(LevelDebug),
-			ReplaceAttr: func(groups []string, a slog.Attr) slog.Attr {
-				if a.Key == slog.TimeKey {
-					return slog.Attr{Key: "ts", Value: a.Value}
-				}
-
-				if a.Key == slog.LevelKey {
-					attr := slog.Attr{Key: "severity"}
-
-					level := a.Value.Any().(slog.Level)
-					switch {
-					case level == slog.Level(LevelTrace):
-						attr.Value = slog.StringValue("TRACE")
-					default:
-						attr.Value = slog.StringValue(level.String())
+		slogger: slog.New(devslog.NewHandler(os.Stderr, &devslog.Options{
+			NewLineAfterLog: true,
+			HandlerOptions: &slog.HandlerOptions{
+				Level: slog.Level(LevelDebug),
+				ReplaceAttr: func(groups []string, a slog.Attr) slog.Attr {
+					if a.Key == slog.TimeKey {
+						return slog.Attr{Key: "ts", Value: a.Value}
 					}
 
-					return attr
-				}
+					if a.Key == slog.LevelKey {
+						attr := slog.Attr{Key: "severity"}
 
-				return a
+						level := a.Value.Any().(slog.Level)
+						switch {
+						case level == slog.Level(LevelTrace):
+							attr.Value = slog.StringValue("TRACE")
+						default:
+							attr.Value = slog.StringValue(level.String())
+						}
+
+						return attr
+					}
+
+					return a
+				},
 			},
 		})),
 	}

@@ -2,6 +2,8 @@ package dishes
 
 import (
 	"time"
+
+	"pyra/pkg/dishproducts"
 )
 
 type Dish struct {
@@ -16,8 +18,16 @@ type Dish struct {
 	Fats     float32
 	Carbs    float32
 
-	// Ingredients []foodproducts.FoodProduct
-
 	CreatedAt time.Time
 	UpdatedAt time.Time
+
+	ingredients []dishproducts.DishProduct
+}
+
+func (dish *Dish) Ingredients() []dishproducts.DishProduct {
+	return dish.ingredients
+}
+
+func (dish *Dish) SetIngredients(ingredients []dishproducts.DishProduct) {
+	dish.ingredients = ingredients
 }

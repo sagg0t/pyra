@@ -4,15 +4,18 @@
 
 {{ define "content" }}
 <header id="main-header">
+    {{ with .Product }}
     <div class="flex justify-between w-full">
         <h1>{{ .Name }}</h1>
         <a href="/foodProducts" class="link-primary">
             List
         </a>
     </div>
+    {{ end }}
 </header>
 
 <section id="product-details" class="mb-8">
+    {{ with .Product }}
     <table>
         <tbody>
             <tr>
@@ -36,9 +39,87 @@
             </tr>
         </tbody>
     </table>
+    {{ end }}
 </section>
 
+{{ with .Versions }}
 <section>
-    <h3 class="section-header">Product references...</h3>
+    <h3 class="section-header">Versions:</h3>
+
+    <table class="table">
+        <thead>
+            <tr class="uppercase border-b border-white">
+                <td>Name</td>
+                <td></td>
+                <td>Version</td>
+                <td>Calories</td>
+                <td>Proteins</td>
+                <td>Fats</td>
+                <td>Carbs</td>
+            </tr>
+        </thead>
+
+        <tbody>
+            {{ range . }}
+            <tr>
+                <td>
+                    <a href="/foodProducts/{{ .ID }}" class="link-primary">
+                        {{ .Name }}
+                    </a>
+                </td>
+                <td>
+                    {{ if eq .Version $.Product.Version}}
+                        <span class="rounded bg-emerald-600 border
+                        border-emerald-600 border-x-4">
+                            current
+                        </span>
+                    {{ end }}
+                </td>
+                <td>{{ .Version }}</td>
+                <td>{{ .Calories }}</td>
+                <td>{{ .Proteins }}</td>
+                <td>{{ .Fats }}</td>
+                <td>{{ .Carbs }}</td>
+            </tr>
+            {{ end }}
+        </tbody>
+    </table>
+</section>
+{{ end }}
+
+<section class="mt-8">
+    {{ with .UsedInDishes }}
+    <h3 class="section-header">Used in:</h3>
+
+    <table class="table">
+        <thead>
+            <tr class="uppercase border-b border-white">
+                <td>Name</td>
+                <td>Calories</td>
+                <td>Proteins</td>
+                <td>Fats</td>
+                <td>Carbs</td>
+            </tr>
+        </thead>
+
+        <tbody>
+            {{ range . }}
+            <tr>
+                <td>
+                    <a href="/dishes/{{ .ID }}" class="link-primary">
+                        {{ .Name }}
+                    </a>
+                </td>
+                <td>{{ .Calories }}</td>
+                <td>{{ .Proteins }}</td>
+                <td>{{ .Fats }}</td>
+                <td>{{ .Carbs }}</td>
+            </tr>
+            {{ end }}
+        </tbody>
+    </table>
+    {{ else }}
+    <h3 class="section-header">Not used in any dishes yet</h3>
+    {{ end }}
 </section>
 {{ end }}

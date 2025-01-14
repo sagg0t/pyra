@@ -2,6 +2,8 @@ package foodproducts
 
 import (
 	"context"
+	"errors"
+	"fmt"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -31,12 +33,42 @@ func (s *FoodProductsRepository) FindById(ctx context.Context, id uint64) (FoodP
 		&resultProduct.Carbs,
 		&resultProduct.CreatedAt,
 		&resultProduct.UpdatedAt,
+		&resultProduct.UID,
+		&resultProduct.Version,
 	)
 	if err != nil {
 		return FoodProduct{}, err
 	}
 
 	return resultProduct, nil
+}
+
+func (s *FoodProductsRepository) Versions(ctx context.Context, uid string) ([]FoodProduct, error) {
+	rows, err := s.db.Query(ctx, "SELECT * FROM food_products WHERE uid = $1", uid)
+	if err != nil {
+		return nil, fmt.Errorf("failed to fetch products: %w", err)
+	}
+
+	products, err := pgx.CollectRows(rows, pgx.RowToStructByName[FoodProduct])
+	if err != nil {
+		return nil, err
+	}
+
+	return products, nil
+}
+
+func (s *FoodProductsRepository) FindAllByIds(ctx context.Context, ids []uint64) ([]FoodProduct, error) {
+	rows, err := s.db.Query(ctx, "SELECT * FROM food_products WHERE id in $0", ids)
+	if err != nil {
+		return nil, fmt.Errorf("failed to fetch products: %w", err)
+	}
+
+	products, err := pgx.CollectRows(rows, pgx.RowToStructByName[FoodProduct])
+	if err != nil {
+		return nil, err
+	}
+
+	return products, nil
 }
 
 func (s *FoodProductsRepository) ForDish(ctx context.Context, id uint64) ([]FoodProduct, error) {
@@ -111,11 +143,11 @@ func (s *FoodProductsRepository) Search(ctx context.Context, searchStr string) (
 		"SELECT id, name, calories, proteins, fats, carbs FROM food_products WHERE name ILIKE '%' || $1 || '%'",
 		searchStr,
 	)
-	if err != nil {
+	if err != nil && !errors.Is(err, pgx.ErrNoRows) {
 		return nil, err
 	}
 
-	var products []FoodProduct
+	products := make([]FoodProduct, 0)
 	for rows.Next() {
 		var product FoodProduct
 

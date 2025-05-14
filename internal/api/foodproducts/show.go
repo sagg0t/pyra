@@ -1,38 +1,24 @@
 package foodproducts
 
 import (
-	"context"
+	"database/sql"
 	"errors"
 	"net/http"
 
-	"github.com/jackc/pgx/v5"
-
 	"pyra/internal/api/base"
-	"pyra/pkg/dishes"
-	"pyra/pkg/foodproducts"
+	"pyra/pkg/nutrition"
 )
 
 type FoodProductHandler struct {
 	*base.Handler
-	svc interface {
-		FoodProductByIdFinder
-		FoodProductVersionFinder
-	}
 
-	dishSvc interface {
-		FindAllByProductID(ctx context.Context, productID uint64) ([]dishes.Dish, error)
-	}
+	productRepo nutrition.ProductRepository
+	dishRepo    nutrition.DishRepository
 }
 
-type FoodProductByIdFinder interface {
-	FindById(context.Context, uint64) (foodproducts.FoodProduct, error)
-}
-
-type FoodProductVersionFinder interface {
-	Versions(context.Context, string) ([]foodproducts.FoodProduct, error)
-}
-
+// GET /foodProducts/:id
 func (h *FoodProductHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
 	log := h.RequestLogger(r)
 
 	id, err := productID(r)
@@ -41,28 +27,28 @@ func (h *FoodProductHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	product, err := h.svc.FindById(r.Context(), id)
+	product, err := h.productRepo.FindByID(ctx, id)
 	if err != nil {
-		if errors.Is(err, pgx.ErrNoRows) {
+		if errors.Is(err, sql.ErrNoRows) {
 			http.NotFound(w, r)
 			return
 		}
 
-		log.Error("failed to retrieve a record", "error", err)
+		log.ErrorContext(ctx, "failed to retrieve a record", "error", err)
 		h.InternalServerError(w)
 		return
 	}
 
-	versions, err := h.svc.Versions(r.Context(), product.UID)
-	if err != nil && !errors.Is(err, pgx.ErrNoRows) {
-		log.Error("failed to retrieve a record", "error", err)
+	versions, err := h.productRepo.Versions(ctx, product.UID)
+	if err != nil && !errors.Is(err, sql.ErrNoRows) {
+		log.ErrorContext(ctx, "failed to retrieve a record", "error", err)
 		h.InternalServerError(w)
 		return
 	}
 
-	usedInDishes, err := h.dishSvc.FindAllByProductID(r.Context(), product.ID)
-	if err != nil && !errors.Is(err, pgx.ErrNoRows) {
-		log.Error("failed to retrieve a record", "error", err)
+	usedInDishes, err := h.dishRepo.FindAllByProductID(ctx, product.ID)
+	if err != nil && !errors.Is(err, sql.ErrNoRows) {
+		log.ErrorContext(ctx, "failed to retrieve a record", "error", err)
 		h.InternalServerError(w)
 		return
 	}
@@ -77,7 +63,7 @@ func (h *FoodProductHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 type FoodProductDetails struct {
-	Product      foodproducts.FoodProduct
-	Versions     []foodproducts.FoodProduct
-	UsedInDishes []dishes.Dish
+	Product      nutrition.Product
+	Versions     []nutrition.Product
+	UsedInDishes []nutrition.Dish
 }

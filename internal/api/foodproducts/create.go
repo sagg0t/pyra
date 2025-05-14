@@ -1,24 +1,23 @@
 package foodproducts
 
 import (
-	"context"
 	"fmt"
 	"net/http"
 
+	"github.com/google/uuid"
+
 	"pyra/internal/api/base"
-	"pyra/pkg/foodproducts"
+	"pyra/pkg/nutrition"
 )
 
 type CreateFoodProductHandler struct {
 	*base.Handler
-	svc FoodProductCreator
+	productRepo nutrition.ProductRepository
 }
 
-type FoodProductCreator interface {
-	Create(context.Context, foodproducts.FoodProduct) (id uint64, err error)
-}
-
+// POST /foodProducts
 func (h *CreateFoodProductHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
 	log := h.RequestLogger(r)
 	session := h.Session(r)
 
@@ -29,27 +28,36 @@ func (h *CreateFoodProductHandler) ServeHTTP(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	form, err := paramsFromForm(r.FormValue)
-	if err != nil {
-		log.Trace("failed to map form data", "error", err)
-		w.WriteHeader(http.StatusUnprocessableEntity)
-		return
-	}
-
-	if !form.Validate() {
+	form := NewProductForm(r.FormValue)
+	if form.HasErrors() {
 		w.WriteHeader(http.StatusUnprocessableEntity)
 		h.Render(w, r, "new-food-product", form)
 		return
 	}
 
-	newProductID, err := h.svc.Create(r.Context(), form.NormalizedProduct())
+	svc, err := nutrition.NewProductService(h.productRepo)
 	if err != nil {
-		form.Errors["base"] = err.Error()
+		log.ErrorContext(ctx, "failed to create ProductService", "error", err)
+		h.InternalServerError(w)
+		return
+	}
+
+	createInfo := nutrition.CreateProductInfo{
+		UID:   nutrition.ProductUID(uuid.New().String()),
+		Name:  form.Name,
+		Macro: form.NormalizedProduct().Macro,
+	}
+
+	product, err := svc.Create(r.Context(), createInfo)
+	if err != nil {
+		session.AddFlash(fmt.Sprintf("failed to create a product: %s", err.Error()))
 
 		w.WriteHeader(http.StatusUnprocessableEntity)
 		h.Render(w, r, "new-food-product", form)
 		return
 	}
 
-	http.Redirect(w, r, fmt.Sprintf("/foodProducts/%d", newProductID), http.StatusFound)
+	http.Redirect(w, r,
+		fmt.Sprintf("/foodProducts/%d", product.ID),
+		http.StatusFound)
 }

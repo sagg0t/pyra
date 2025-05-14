@@ -1,25 +1,21 @@
 package foodproducts
 
 import (
-	"context"
+	"database/sql"
 	"errors"
 	"net/http"
 
-	"github.com/jackc/pgx/v5"
-
 	"pyra/internal/api/base"
+	"pyra/pkg/nutrition"
 )
 
 type DeleteFoodProductHandler struct {
 	*base.Handler
-	svc FoodProductDeleter
-}
-
-type FoodProductDeleter interface {
-	Delete(ctx context.Context, id uint64) error
+	productRepo nutrition.ProductRepository
 }
 
 func (h *DeleteFoodProductHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
 	log := h.RequestLogger(r)
 
 	id, err := productID(r)
@@ -28,14 +24,14 @@ func (h *DeleteFoodProductHandler) ServeHTTP(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	err = h.svc.Delete(r.Context(), id)
+	err = h.productRepo.Delete(ctx, id)
 	if err != nil {
-		if errors.Is(err, pgx.ErrNoRows) {
+		if errors.Is(err, sql.ErrNoRows) {
 			http.NotFound(w, r)
 			return
 		}
 
-		log.Error("failed to delete FoodProduct", "error", err)
+		log.ErrorContext(ctx, "failed to delete FoodProduct", "error", err)
 		h.InternalServerError(w)
 		return
 	}

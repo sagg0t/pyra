@@ -1,11 +1,15 @@
 package routes
 
-import "fmt"
+import (
+	"fmt"
 
-func EditFoodProduct(id uint64) string {
-	return fmt.Sprintf("/foodProducts/%d/edit", id)
+	"pyra/pkg/nutrition"
+)
+
+func EditFoodProduct(id nutrition.ProductID) string {
+	return fmt.Sprintf("/foodProducts/%d/edit", uint64(id))
 }
 
-func FoodProduct(id uint64) string {
-	return fmt.Sprintf("/foodProducts/%d", id)
+func FoodProduct(id nutrition.ProductID) string {
+	return fmt.Sprintf("/foodProducts/%d", uint64(id))
 }

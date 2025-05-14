@@ -4,24 +4,25 @@ import (
 	"net/http"
 
 	"pyra/internal/api/base"
-	"pyra/pkg/dishes"
-	"pyra/pkg/foodproducts"
+	"pyra/internal/dishes"
+	"pyra/internal/foodproducts"
+	"pyra/pkg/nutrition"
 )
 
 type API struct {
 	*base.API
-	repository     *foodproducts.FoodProductsRepository
-	dishRepository *dishes.Repository
+	productRepo nutrition.ProductRepository
+	dishRepo    nutrition.DishRepository
 }
 
 func NewAPI(api *base.API) *API {
-	svc := foodproducts.NewRepository(api.DB)
-	dishSvc := dishes.NewRepository(api.DB)
+	repo := foodproducts.NewRepository(api.DB)
+	dishRepo := dishes.NewRepository(api.DB)
 
 	return &API{
-		API:            api,
-		repository:     svc,
-		dishRepository: dishSvc,
+		API:         api,
+		productRepo: repo,
+		dishRepo:    dishRepo,
 	}
 }
 
@@ -33,8 +34,8 @@ func (api *API) Index() http.Handler {
 	}
 
 	return &FoodProductsHandler{
-		Handler: baseHandler,
-		svc:     api.repository,
+		Handler:     baseHandler,
+		productRepo: api.productRepo,
 	}
 }
 
@@ -46,9 +47,9 @@ func (api *API) Show() http.Handler {
 	}
 
 	return &FoodProductHandler{
-		Handler: baseHandler,
-		svc:     api.repository,
-		dishSvc: api.dishRepository,
+		Handler:     baseHandler,
+		productRepo: api.productRepo,
+		dishRepo:    api.dishRepo,
 	}
 }
 
@@ -72,8 +73,8 @@ func (api *API) Edit() http.Handler {
 	}
 
 	return &EditFoodProductHandler{
-		Handler: baseHandler,
-		svc:     api.repository,
+		Handler:     baseHandler,
+		productRepo: api.productRepo,
 	}
 }
 
@@ -85,8 +86,8 @@ func (api *API) Create() http.Handler {
 	}
 
 	return &CreateFoodProductHandler{
-		Handler: baseHandler,
-		svc:     api.repository,
+		Handler:     baseHandler,
+		productRepo: api.productRepo,
 	}
 }
 
@@ -98,21 +99,21 @@ func (api *API) Update() http.Handler {
 	}
 
 	return &UpdateFoodProductHandler{
-		Handler: baseHandler,
-		svc:     api.repository,
+		Handler:     baseHandler,
+		productRepo: api.productRepo,
 	}
 }
 
 func (api *API) Delete() http.Handler {
 	return &DeleteFoodProductHandler{
-		Handler: api.NewHandler(),
-		svc:     api.repository,
+		Handler:     api.NewHandler(),
+		productRepo: api.productRepo,
 	}
 }
 
 func (api *API) Search() http.Handler {
 	return &SearchFoodProductsHandler{
-		Handler: api.NewHandler(),
-		svc:     api.repository,
+		Handler:     api.NewHandler(),
+		productRepo: api.productRepo,
 	}
 }

@@ -74,7 +74,7 @@ func (eng *Engine) AppliedMigrations() ([]Migration, error) {
 // List of migration versions stored in the database.
 func (eng *Engine) remoteVersions() ([]Migration, error) {
 	ctx := context.TODO()
-	rows, err := eng.db.Query(ctx, "SELECT * FROM schema_migrations;")
+	rows, err := eng.db.QueryContext(ctx, "SELECT * FROM schema_migrations;")
 	if err != nil {
 		return nil, err
 	}

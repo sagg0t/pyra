@@ -1,28 +1,24 @@
 package dishes
 
 import (
-	"context"
 	"net/http"
 
 	"pyra/internal/api/base"
-	"pyra/pkg/dishes"
+	"pyra/pkg/nutrition"
 )
 
 type ListDishesHandler struct {
 	*base.Handler
-	svc DishIndexer
-}
-
-type DishIndexer interface {
-	Index(context.Context) ([]dishes.Dish, error)
+	svc nutrition.DishRepository
 }
 
 func (h *ListDishesHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
 	log := h.RequestLogger(r)
 
-	dishes, err := h.svc.Index(r.Context())
+	dishes, err := h.svc.Index(ctx)
 	if err != nil {
-		log.Error("failed to list dishes", "error", err)
+		log.ErrorContext(ctx, "failed to list dishes", "error", err)
 		h.InternalServerError(w)
 		return
 	}

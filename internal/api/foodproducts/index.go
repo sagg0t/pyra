@@ -1,26 +1,28 @@
 package foodproducts
 
 import (
-	"context"
 	"net/http"
 
 	"pyra/internal/api/base"
-	"pyra/pkg/foodproducts"
+	"pyra/pkg/nutrition"
 )
 
 type FoodProductsHandler struct {
 	*base.Handler
-	svc FoodProductIndexer
-}
-
-type FoodProductIndexer interface {
-	Index(context.Context) ([]foodproducts.FoodProduct, error)
+	productRepo nutrition.ProductRepository
 }
 
 func (h *FoodProductsHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	log := h.RequestLogger(r)
 
-	foodProducts, err := h.svc.Index(r.Context())
+	svc, err := nutrition.NewProductService(h.productRepo)
+	if err != nil {
+		log.Error("failed to create ProductService", "error", err)
+		h.InternalServerError(w)
+		return
+	}
+
+	foodProducts, err := svc.List(r.Context())
 	if err != nil {
 		log.Error("failed to list produces", "error", err)
 		h.InternalServerError(w)

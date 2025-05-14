@@ -1,100 +1,106 @@
 package foodproducts
 
 import (
+	"errors"
+	"fmt"
 	"net/http"
 	"strconv"
 
-	"pyra/pkg/foodproducts"
+	"pyra/pkg/nutrition"
 )
 
-func productID(r *http.Request) (uint64, error) {
+var (
+	errNoName      = errors.New("can't be blank")
+	errNegative    = errors.New("can't be less than 0")
+	errNotPositive = errors.New("must be greater than 0")
+)
+
+func productID(r *http.Request) (nutrition.ProductID, error) {
 	paramID := r.PathValue("id")
-	return strconv.ParseUint(paramID, 10, 64)
+
+	parsedID, err := strconv.ParseUint(paramID, 10, 64)
+	if err != nil {
+		return nutrition.ProductID(0), err
+	}
+
+	return nutrition.ProductID(parsedID), nil
 }
 
-func paramsFromForm(fetch func(key string) string) (ProductForm, error) {
-	form := ProductForm{
-		FoodProduct: foodproducts.FoodProduct{
-			Name: fetch("name"),
-		},
-		Errors: map[string]string{},
+type ProductForm struct {
+	nutrition.Product
+	Per float32
+
+	Errors productFormErrors
+}
+
+type productFormErrors struct {
+	Per error
+	nutrition.ProductErrors
+}
+
+func NewProductForm(fetch func(key string) string) ProductForm {
+	form := ProductForm{}
+
+	name, err := nutrition.NewProductName(fetch("name"))
+	if err != nil {
+		form.Errors.Name = err
 	}
+	form.Name = name
 
 	calories64, err := strconv.ParseFloat(fetch("calories"), 32)
 	if err != nil {
-		return form, err
+		form.Errors.Calories = err
 	}
-	form.Calories = float32(calories64)
 
 	proteins64, err := strconv.ParseFloat(fetch("proteins"), 32)
 	if err != nil {
-		return form, err
+		form.Errors.Proteins = err
 	}
-	form.Proteins = float32(proteins64)
 
 	fats64, err := strconv.ParseFloat(fetch("fats"), 32)
 	if err != nil {
-		return form, err
+		form.Errors.Fats = err
 	}
-	form.Fats = float32(fats64)
 
 	carbs64, err := strconv.ParseFloat(fetch("carbs"), 32)
 	if err != nil {
-		return form, err
+		form.Errors.Carbs = err
 	}
-	form.Carbs = float32(carbs64)
+
+	form.Macro, form.Errors.MacroErrors = nutrition.NewMacro(
+		float32(calories64),
+		float32(proteins64),
+		float32(fats64),
+		float32(carbs64),
+	)
 
 	per64, err := strconv.ParseFloat(fetch("per"), 32)
 	if err != nil {
-		return form, err
+		form.Errors.Per = err
+	} else if per64 < 0 {
+		form.Errors.Per = errNotPositive
 	}
 	form.Per = float32(per64)
 
-	return form, nil
+	return form
 }
 
-const (
-	errNoName      = "can't be blank"
-	errNegative    = "can't be less than 0"
-	errNotPositive = "must be greater than 0"
-)
+func (e *productFormErrors) HasErrors() bool {
+	perErr := e.Per != nil
 
-type ProductForm struct {
-	foodproducts.FoodProduct
-	Per    float32
-	Errors map[string]string
+	return perErr || e.ProductErrors.HasErrors()
 }
 
-func (f *ProductForm) Validate() bool {
-	if len(f.Name) == 0 {
-		f.Errors["name"] = errNoName
-	}
-
-	if f.Calories < 0 {
-		f.Errors["calories"] = errNegative
-	}
-
-	if f.Per <= 0 {
-		f.Errors["per"] = errNotPositive
-	}
-
-	if f.Proteins < 0 {
-		f.Errors["proteins"] = errNegative
-	}
-
-	if f.Fats < 0 {
-		f.Errors["fats"] = errNegative
-	}
-
-	if f.Carbs < 0 {
-		f.Errors["carbs"] = errNegative
-	}
-
-	return len(f.Errors) == 0
+func (e *productFormErrors) Error() string {
+	return fmt.Errorf("per: %w\n%s", e.Per, e.ProductErrors.Error()).Error()
 }
 
-func (f *ProductForm) NormalizedProduct() foodproducts.FoodProduct {
-	clone := f.FoodProduct
+func (f *ProductForm) HasErrors() bool {
+	return f.Errors.HasErrors()
+}
+
+func (f *ProductForm) NormalizedProduct() nutrition.Product {
+	clone := f.Product
 	clone.Normalize(f.Per)
 
 	return clone

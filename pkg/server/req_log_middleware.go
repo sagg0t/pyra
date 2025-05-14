@@ -34,7 +34,8 @@ func Logger(logger *log.Logger, f http.Handler) http.Handler {
 		traceId := uuid.New()
 		l := logger.With("traceId", traceId.String())
 
-		ctxWithLog := log.CtxWithLogger(r.Context(), l)
+		ctx := r.Context()
+		ctxWithLog := log.CtxWithLogger(ctx, l)
 		r = r.WithContext(ctxWithLog)
 
 		ww := responseStatusCatcher{ResponseWriter: w}
@@ -43,7 +44,14 @@ func Logger(logger *log.Logger, f http.Handler) http.Handler {
 		endT := time.Now()
 		took := endT.Sub(startT)
 
-		l.Info("",
+		var level log.Level
+		if ww.StatusCode() < 500 {
+			level = log.LevelInfo
+		} else {
+			level = log.LevelError
+		}
+
+		l.Log(ctx, level, "",
 			"event", log.RequestEvent,
 			"status", ww.StatusCode(),
 			"method", r.Method,

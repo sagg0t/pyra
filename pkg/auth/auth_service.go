@@ -2,42 +2,23 @@ package auth
 
 import (
 	"context"
+	"database/sql"
 	"errors"
 	"fmt"
 
-	"github.com/jackc/pgx/v5"
-	"github.com/jackc/pgx/v5/pgxpool"
-
-	"pyra/pkg/users"
+	"pyra/pkg/db"
 )
 
 type AuthService struct {
-	db           *pgxpool.Pool
-	providerRepo ProviderCreator
-	userRepo     UserCreateFinder
+	db           db.DBTX
+	providerRepo ProviderRepository
+	userRepo     UserRepository
 }
-
-type ProviderCreator interface {
-	Create(ctx context.Context, userId uint64, name, uid string) (uint64, error)
-}
-
-type (
-	UserByEmailFinder interface {
-		FindByEmail(ctx context.Context, email string) (users.User, error)
-	}
-	UserCreator interface {
-		Create(ctx context.Context, params users.User) (uint64, error)
-	}
-	UserCreateFinder interface {
-		UserByEmailFinder
-		UserCreator
-	}
-)
 
 func NewService(
-	db *pgxpool.Pool,
-	proproviderRepo ProviderCreator,
-	userRepo UserCreateFinder,
+	db db.DBTX,
+	proproviderRepo ProviderRepository,
+	userRepo UserRepository,
 ) *AuthService {
 	return &AuthService{
 		db:           db,
@@ -46,17 +27,17 @@ func NewService(
 	}
 }
 
-func (svc *AuthService) SignIn(ctx context.Context, guser GoogleUser) (user users.User, err error) {
-	tx, err := svc.db.Begin(ctx)
+func (svc *AuthService) SignIn(ctx context.Context, guser GoogleUser) (user User, err error) {
+	tx, err := svc.db.BeginTx(ctx, nil)
 	if err != nil {
 		return user, fmt.Errorf("failed to acquire a transaction - %w", err)
 	}
 	// Defering commit/rollback. Will rollback if err != nil.
 	defer func() {
 		if err == nil {
-			err = tx.Commit(ctx)
+			err = tx.Commit()
 		} else {
-			rollbackErr := tx.Rollback(ctx)
+			rollbackErr := tx.Rollback()
 			if rollbackErr != nil {
 				err = fmt.Errorf("failed to rollback a transaction: %w", rollbackErr)
 			}
@@ -65,14 +46,14 @@ func (svc *AuthService) SignIn(ctx context.Context, guser GoogleUser) (user user
 
 	user, err = svc.userRepo.FindByEmail(ctx, guser.Email)
 	if err != nil {
-		if !errors.Is(err, pgx.ErrNoRows) {
-			return users.User{}, fmt.Errorf("failed to find user - %w", err)
+		if !errors.Is(err, sql.ErrNoRows) {
+			return User{}, fmt.Errorf("failed to find user - %w", err)
 		}
 
 		// User not found, i.e. sign up flow.
 		user, err = svc.CreateUser(ctx, guser)
 		if err != nil {
-			return users.User{}, err
+			return User{}, err
 		}
 
 		_, err := svc.CreateProvider(ctx, user, guser)
@@ -86,8 +67,8 @@ func (svc *AuthService) SignIn(ctx context.Context, guser GoogleUser) (user user
 	return user, err
 }
 
-func (svc *AuthService) CreateUser(ctx context.Context, guser GoogleUser) (users.User, error) {
-	user := users.User{
+func (svc *AuthService) CreateUser(ctx context.Context, guser GoogleUser) (User, error) {
+	user := User{
 		Email:     guser.Email,
 		FirstName: guser.FirstName,
 		LastName:  guser.LastName,
@@ -95,7 +76,7 @@ func (svc *AuthService) CreateUser(ctx context.Context, guser GoogleUser) (users
 
 	id, err := svc.userRepo.Create(ctx, user)
 	if err != nil {
-		return users.User{}, err
+		return User{}, err
 	}
 
 	user.ID = id
@@ -103,7 +84,7 @@ func (svc *AuthService) CreateUser(ctx context.Context, guser GoogleUser) (users
 	return user, nil
 }
 
-func (svc *AuthService) CreateProvider(ctx context.Context, user users.User, guser GoogleUser) (Provider, error) {
+func (svc *AuthService) CreateProvider(ctx context.Context, user User, guser GoogleUser) (Provider, error) {
 	id, err := svc.providerRepo.Create(ctx, user.ID, string(ProviderGoogleOAuth2), guser.UID)
 	if err != nil {
 		return Provider{}, err

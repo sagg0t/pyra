@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/url"
 
+	_ "github.com/jackc/pgx/v5/stdlib"
 	"github.com/sethvargo/go-envconfig"
 )
 

@@ -2,6 +2,7 @@ package migrate
 
 import (
 	"context"
+	"database/sql"
 	"errors"
 	"fmt"
 	"log/slog"
@@ -11,8 +12,6 @@ import (
 	"sort"
 	"strconv"
 	"time"
-
-	"github.com/jackc/pgx/v5"
 )
 
 var (
@@ -27,12 +26,12 @@ var (
 )
 
 type Engine struct {
-	db   *pgx.Conn
+	db   *sql.DB
 	conf Config
 }
 
 func NewEngine(conf Config, dbConf DBConfig) (*Engine, error) {
-	dbConn, err := pgx.Connect(context.Background(), dbConf.String())
+	dbConn, err := sql.Open(dbConf.Adapter, dbConf.String())
 	if err != nil {
 		return nil, err
 	}
@@ -52,13 +51,13 @@ func NewEngine(conf Config, dbConf DBConfig) (*Engine, error) {
 
 func (eng *Engine) init() error {
 	ctx := context.Background()
-	err := eng.db.Ping(ctx)
+	err := eng.db.PingContext(ctx)
 	if err != nil {
 		return fmt.Errorf("DB ping failed - %w", err)
 	}
 	slog.Debug("DB ping successful")
 
-	_, err = eng.db.Exec(ctx, fmt.Sprintf(initTemplate, eng.conf.TableName))
+	_, err = eng.db.ExecContext(ctx, fmt.Sprintf(initTemplate, eng.conf.TableName))
 	if err != nil {
 		return fmt.Errorf("failed to create the control table:\n\t %w", err)
 	}
@@ -110,13 +109,13 @@ func (eng *Engine) CreateMigration(name string) ([]string, error) {
 
 func (eng *Engine) CurrentVersion() (Migration, error) {
 	ctx := context.Background()
-	row := eng.db.QueryRow(ctx, "SELECT * FROM schema_migrations ORDER BY version DESC LIMIT 1;")
+	row := eng.db.QueryRowContext(ctx, "SELECT * FROM schema_migrations ORDER BY version DESC LIMIT 1;")
 
 	m := Migration{}
 
 	err := row.Scan(&m.Version, &m.AppliedAt)
 	if err != nil {
-		if errors.Is(err, pgx.ErrNoRows) {
+		if errors.Is(err, sql.ErrNoRows) {
 			return Migration{Version: "0", AppliedAt: time.Time{}}, nil
 		}
 

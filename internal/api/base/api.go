@@ -3,22 +3,22 @@ package base
 import (
 	"html/template"
 
-	"github.com/jackc/pgx/v5/pgxpool"
-
-	"pyra/pkg/users"
+	"pyra/internal/users"
+	"pyra/pkg/auth"
+	"pyra/pkg/db"
 )
 
 type API struct {
-	DB      *pgxpool.Pool
-	drivers *template.Template
-	UserSvc *users.UserRepository
+	DB       db.DBTX
+	drivers  *template.Template
+	UserRepo auth.UserRepository
 }
 
-func NewAPI(db *pgxpool.Pool, drivers *template.Template) *API {
+func NewAPI(db db.DBTX, drivers *template.Template) *API {
 	return &API{
-		DB:      db,
-		drivers: drivers,
-		UserSvc: users.NewRepository(db),
+		DB:       db,
+		drivers:  drivers,
+		UserRepo: users.NewRepository(db),
 	}
 }
 
@@ -30,6 +30,6 @@ func (api *API) NewHandler() *Handler {
 
 	return &Handler{
 		template: baseTemplate,
-		userSvc:  api.UserSvc,
+		userRepo: api.UserRepo,
 	}
 }

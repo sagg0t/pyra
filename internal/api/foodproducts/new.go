@@ -11,9 +11,7 @@ type NewFoodProductHandler struct {
 }
 
 func (h *NewFoodProductHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	form := ProductForm{
-		Per: 100,
-	}
+	form := ProductForm{Per: 100}
 
 	h.Render(w, r, "new-food-product", form)
 }

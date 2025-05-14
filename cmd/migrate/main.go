@@ -15,7 +15,7 @@ func main() {
 
 	config := migrate.NewConfig()
 
-	dbConfig := migrate.NewDBConfig("postgres")
+	dbConfig := migrate.NewDBConfig("pgx")
 	dbConfig.Attrs.Add("sslmode", fetchEnv("DB_SSLMODE", "disable"))
 
 	var command string
@@ -39,6 +39,7 @@ func main() {
 		if len(os.Args) > 2 {
 			argCount, err := parseCount(os.Args[2])
 			if err != nil {
+				fmt.Println(err)
 				commandError = err
 				break
 			}

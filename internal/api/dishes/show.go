@@ -1,36 +1,23 @@
 package dishes
 
 import (
-	"context"
+	"database/sql"
 	"errors"
 	"net/http"
 
-	"github.com/jackc/pgx/v5"
-
 	"pyra/internal/api/base"
-	"pyra/pkg/dishes"
-	"pyra/pkg/foodproducts"
+	"pyra/pkg/nutrition"
 )
 
 type ShowDishHandler struct {
 	*base.Handler
-	svc interface {
-		DishByIdFinder
-		DishVersionFinder
-	}
+	dishRepo nutrition.DishRepository
 
-	productsRepo *foodproducts.FoodProductsRepository
-}
-
-type DishByIdFinder interface {
-	FindByID(context.Context, uint64) (dishes.Dish, error)
-}
-
-type DishVersionFinder interface {
-	Versions(ctx context.Context, uid string) ([]dishes.Dish, error)
+	productRepo nutrition.ProductRepository
 }
 
 func (h *ShowDishHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
 	log := h.RequestLogger(r)
 
 	id, err := dishID(r)
@@ -39,24 +26,28 @@ func (h *ShowDishHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	dish, err := h.svc.FindByID(r.Context(), id)
+	dish, err := h.dishRepo.FindByID(ctx, id)
 	if err != nil {
-		if errors.Is(err, pgx.ErrNoRows) {
-			http.NotFound(w, r)
-			return
+		if errors.Is(err, sql.ErrNoRows) {
+			h.NotFound(w, r)
+		} else {
+			log.TraceContext(ctx, "failed to find dish", "error", err)
+			h.InternalServerError(w)
 		}
+
+		return
 	}
 
-	versions, err := h.svc.Versions(r.Context(), dish.UID)
-	if err != nil && !errors.Is(err, pgx.ErrNoRows) {
-		log.Error("failed to retrieve a record", "error", err)
+	versions, err := h.dishRepo.Versions(ctx, dish.UID)
+	if err != nil && !errors.Is(err, sql.ErrNoRows) {
+		log.TraceContext(ctx, "failed to retrieve dish versions", "error", err)
 		h.InternalServerError(w)
 		return
 	}
 
-	products, err := h.productsRepo.ForDish(r.Context(), dish.ID)
-	if err != nil && !errors.Is(err, pgx.ErrNoRows) {
-		log.Error("failed to retrieve a record", "error", err)
+	products, err := h.productRepo.ForDish(ctx, dish.ID)
+	if err != nil && !errors.Is(err, sql.ErrNoRows) {
+		log.TraceContext(ctx, "failed to retrieve dishe's products", "error", err)
 		h.InternalServerError(w)
 		return
 	}
@@ -65,7 +56,7 @@ func (h *ShowDishHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 type DishDetails struct {
-	Dish     dishes.Dish
-	Versions []dishes.Dish
-	Products []foodproducts.FoodProduct
+	Dish     nutrition.Dish
+	Versions []nutrition.Dish
+	Products []nutrition.Product
 }

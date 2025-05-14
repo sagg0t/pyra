@@ -39,8 +39,8 @@ func main() {
 		os.Exit(1)
 	}
 
-	dbConf := db.NewConfig("postgres")
-	dbPool, err := db.CreatePool(ctx, dbConf, rootLogger)
+	dbConf := db.NewConfig("pgx")
+	dbPool, err := db.New(ctx, dbConf, rootLogger)
 	if err != nil {
 		rootLogger.Error("failed to create a DB pool", "error", err)
 		os.Exit(1)
@@ -52,8 +52,12 @@ func main() {
 	staticFs := http.FileServerFS(os.DirFS("./public/assets"))
 	mux.Handle("/assets/", http.StripPrefix("/assets/", staticFs))
 
-	err = srv.Start(ctx, server.Logger(rootLogger, server.Session(mux)))
-	if err != nil {
+	var h http.Handler = mux
+	h = server.PanicRecovery(h)
+	h = server.Session(h)
+	h = server.Logger(rootLogger, h)
+
+	if err = srv.Start(ctx, h); err != nil {
 		rootLogger.Error("failed to start a server", "error", err)
 	}
 }

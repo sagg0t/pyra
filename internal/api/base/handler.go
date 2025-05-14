@@ -1,26 +1,21 @@
 package base
 
 import (
-	"context"
 	"errors"
 	"fmt"
 	"html/template"
 	"net/http"
 
+	"pyra/pkg/auth"
 	"pyra/pkg/log"
 	"pyra/pkg/session"
-	"pyra/pkg/users"
 )
 
 var ErrNoUsesr = errors.New("no current user")
 
 type Handler struct {
 	template *template.Template
-	userSvc  UserFinder
-}
-
-type UserFinder interface {
-	FindById(context.Context, uint64) (users.User, error)
+	userRepo auth.UserRepository
 }
 
 func (h *Handler) Render(w http.ResponseWriter, r *http.Request, name string, data any) {
@@ -51,14 +46,14 @@ func (h *Handler) NotFound(w http.ResponseWriter, r *http.Request) {
 	h.template.ExecuteTemplate(w, "not-found-error", nil)
 }
 
-func (h *Handler) CurrentUser(r *http.Request) (*users.User, error) {
+func (h *Handler) CurrentUser(r *http.Request) (*auth.User, error) {
 	s := h.Session(r)
 	userId, ok := s.Values[UserIDSessionKey]
 	if !ok {
 		return nil, ErrNoUsesr
 	}
 
-	user, err := h.userSvc.FindById(r.Context(), userId.(uint64))
+	user, err := h.userRepo.FindByID(r.Context(), userId.(uint64))
 	if err != nil {
 		return nil, err
 	}

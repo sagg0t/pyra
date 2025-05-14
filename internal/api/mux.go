@@ -4,21 +4,19 @@ import (
 	"html/template"
 	"net/http"
 
-	"github.com/jackc/pgx/v5/pgxpool"
-
-	"pyra/internal/api/auth"
 	"pyra/internal/api/base"
 	"pyra/internal/api/dishes"
 	"pyra/internal/api/foodproducts"
+	"pyra/pkg/db"
 	"pyra/pkg/log"
 )
 
-func Mux(db *pgxpool.Pool, l *log.Logger) *http.ServeMux {
+func Mux(db db.DBTX, l *log.Logger) *http.ServeMux {
 	mux := http.NewServeMux()
 	drivers := baseTemplate()
 
 	baseAPI := base.NewAPI(db, drivers)
-	authAPI := auth.NewAPI(baseAPI)
+	// authAPI := auth.NewAPI(baseAPI)
 	foodProductsAPI := foodproducts.NewAPI(baseAPI)
 	dishesAPI := dishes.NewAPI(baseAPI)
 
@@ -34,10 +32,10 @@ func Mux(db *pgxpool.Pool, l *log.Logger) *http.ServeMux {
 		}
 	})
 
-	mux.Handle("GET /signIn", authAPI.SignIn())
-	mux.Handle("GET /auth/google", authAPI.GoogleAuthorize())
-	mux.Handle("GET /auth/google/callback", authAPI.GoogleCallback())
-	mux.Handle("GET /signOut", base.Authenticated(authAPI.SignOut()))
+	// mux.Handle("GET /signIn", authAPI.SignIn())
+	// mux.Handle("GET /auth/google", authAPI.GoogleAuthorize())
+	// mux.Handle("GET /auth/google/callback", authAPI.GoogleCallback())
+	// mux.Handle("GET /signOut", base.Authenticated(authAPI.SignOut()))
 
 	mux.Handle("GET /foodProducts", base.Authenticated(foodProductsAPI.Index()))
 	mux.Handle("GET /foodProducts/{id}", base.Authenticated(foodProductsAPI.Show()))
@@ -49,9 +47,9 @@ func Mux(db *pgxpool.Pool, l *log.Logger) *http.ServeMux {
 	mux.Handle("POST /foodProducts/search", foodProductsAPI.Search()) // TODO: authenticate
 
 	mux.Handle("GET /dishes", base.Authenticated(dishesAPI.Index()))
-	mux.Handle("GET /dishes/{id}", base.Authenticated(dishesAPI.Show()))
-	mux.Handle("GET /dishes/new", base.Authenticated(dishesAPI.New()))
-	mux.Handle("POST /dishes", base.Authenticated(dishesAPI.Create()))
+	// mux.Handle("GET /dishes/{id}", base.Authenticated(dishesAPI.Show()))
+	// mux.Handle("GET /dishes/new", base.Authenticated(dishesAPI.New()))
+	// mux.Handle("POST /dishes", base.Authenticated(dishesAPI.Create()))
 
 	return mux
 }

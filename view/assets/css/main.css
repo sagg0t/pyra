@@ -1,16 +1,33 @@
-/* @import must be first, even before @tailwind */
-@import "./navigation";
-@import "./header";
-@import "./food_products";
+@import "tailwindcss";
 
-@import "./components/buttons";
-@import "./components/links";
-@import "./components/forms";
-@import "./components/search_bar";
+@plugin "@tailwindcss/forms";
 
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "./components/buttons.css" layer(base);
+@import "./components/links.css" layer(base);
+@import "./components/forms.css" layer(base);
+@import "./components/search_bar.css" layer(base);
+
+@import "./navigation.css" layer(base);
+@import "./header.css" layer(base);
+@import "./food_products.css" layer(base);
+
+/*
+  The default border color has changed to `currentcolor` in Tailwind CSS v4,
+  so we've added these compatibility styles to make sure everything still
+  looks the same as it did with Tailwind CSS v3.
+
+  If we ever want to remove these styles, we need to add an explicit border
+  color utility to any element that depends on these defaults.
+*/
+@layer base {
+  *,
+  ::after,
+  ::before,
+  ::backdrop,
+  ::file-selector-button {
+    border-color: var(--color-gray-200, currentcolor);
+  }
+}
 
 body {
     position: relative;

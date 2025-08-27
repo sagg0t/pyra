@@ -1,4 +1,4 @@
-{{ define "food-product-list" }}
+{{ define "product-list" }}
 {{ template "layout" . }}
 {{ end }}
 
@@ -7,7 +7,7 @@
     <div class="flex justify-between">
         <h1>Products</h1>
 
-        <a href="/foodProducts/new">
+        <a href="/products/new">
             <button type="button" class="btn-primary">
                 Add
             </button>
@@ -31,7 +31,7 @@
         {{ range . }}
             <tr>
                 <td>
-                    <a href="{{ foodProductURI .ID }}" class="link-primary">
+                    <a href="{{ productURI . }}" class="link-primary">
                         {{ .Name }}
                     </a>
                 </td>
@@ -42,12 +42,12 @@
                 <td>
                     <ul class="actions">
                         <li>
-                            <a href="{{ editFoodProductURI .ID }}" class="link-secondary">
+                            <a href="{{ editProductURI . }}" class="link-secondary">
                                 Edit
                             </a>
                         </li>
                         <li>
-                            <span hx-delete="{{ foodProductURI .ID }}" class="link-secondary">
+                            <span hx-delete="{{ productURI . }}" class="link-secondary">
                                 Delete
                             </span>
                         </li>

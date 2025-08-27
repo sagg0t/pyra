@@ -1,22 +1,20 @@
-package foodproducts
+package products
 
 import (
 	"fmt"
 	"net/http"
 
-	"github.com/google/uuid"
-
 	"pyra/internal/api/base"
 	"pyra/pkg/nutrition"
 )
 
-type CreateFoodProductHandler struct {
+type CreateProductHandler struct {
 	*base.Handler
 	productRepo nutrition.ProductRepository
 }
 
-// POST /foodProducts
-func (h *CreateFoodProductHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+// POST /products
+func (h *CreateProductHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	log := h.RequestLogger(r)
 	session := h.Session(r)
@@ -30,12 +28,13 @@ func (h *CreateFoodProductHandler) ServeHTTP(w http.ResponseWriter, r *http.Requ
 
 	form := NewProductForm(r.FormValue)
 	if form.HasErrors() {
+		log.DebugContext(ctx, "create product validation error", "error", form.Errors)
 		w.WriteHeader(http.StatusUnprocessableEntity)
-		h.Render(w, r, "new-food-product", form)
+		h.Render(w, r, "new-product", form)
 		return
 	}
 
-	svc, err := nutrition.NewProductService(h.productRepo)
+	svc, err := nutrition.NewProductService(h.productRepo, nil)
 	if err != nil {
 		log.ErrorContext(ctx, "failed to create ProductService", "error", err)
 		h.InternalServerError(w)
@@ -43,21 +42,21 @@ func (h *CreateFoodProductHandler) ServeHTTP(w http.ResponseWriter, r *http.Requ
 	}
 
 	createInfo := nutrition.CreateProductInfo{
-		UID:   nutrition.ProductUID(uuid.New().String()),
 		Name:  form.Name,
 		Macro: form.NormalizedProduct().Macro,
 	}
 
-	product, err := svc.Create(r.Context(), createInfo)
+	product, err := svc.Create(ctx, createInfo)
 	if err != nil {
+		log.DebugContext(ctx, "failed to save product", "error", err)
 		session.AddFlash(fmt.Sprintf("failed to create a product: %s", err.Error()))
 
 		w.WriteHeader(http.StatusUnprocessableEntity)
-		h.Render(w, r, "new-food-product", form)
+		h.Render(w, r, "new-product", form)
 		return
 	}
 
 	http.Redirect(w, r,
-		fmt.Sprintf("/foodProducts/%d", product.ID),
+		fmt.Sprintf("/products/%s/%d", product.UID, product.Version),
 		http.StatusFound)
 }

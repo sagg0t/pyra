@@ -91,5 +91,5 @@ func (h *GoogleCallbackHandler) ServeHTTP(w http.ResponseWriter, r *http.Request
 	session := h.Session(r)
 	session.Values[base.UserIDSessionKey] = user.ID
 
-	http.Redirect(w, r, "/foodProducts", http.StatusSeeOther)
+	http.Redirect(w, r, "/products", http.StatusSeeOther)
 }

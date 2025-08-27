@@ -5,7 +5,7 @@ import (
 
 	"pyra/internal/api/base"
 	"pyra/internal/dishes"
-	"pyra/internal/foodproducts"
+	"pyra/internal/products"
 )
 
 type API struct {
@@ -41,7 +41,7 @@ func (api *API) Show() http.Handler {
 	return &ShowDishHandler{
 		Handler:     baseHandler,
 		dishRepo:    dishes.NewRepository(api.DB),
-		productRepo: foodproducts.NewRepository(api.DB),
+		productRepo: products.NewRepository(api.DB),
 	}
 }
 

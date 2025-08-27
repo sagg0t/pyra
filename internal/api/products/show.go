@@ -1,4 +1,4 @@
-package foodproducts
+package products
 
 import (
 	"database/sql"
@@ -9,25 +9,26 @@ import (
 	"pyra/pkg/nutrition"
 )
 
-type FoodProductHandler struct {
+type ProductHandler struct {
 	*base.Handler
 
 	productRepo nutrition.ProductRepository
 	dishRepo    nutrition.DishRepository
 }
 
-// GET /foodProducts/:id
-func (h *FoodProductHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+// GET /products/:uid/:version
+func (h *ProductHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	log := h.RequestLogger(r)
 
-	id, err := productID(r)
+	uid, version, err := productRef(r)
 	if err != nil {
+		log.ErrorContext(ctx, "malformed product UID or version", "error", err)
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 
-	product, err := h.productRepo.FindByID(ctx, id)
+	product, err := h.productRepo.FindByRef(ctx, uid, version)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			http.NotFound(w, r)
@@ -53,16 +54,16 @@ func (h *FoodProductHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	details := FoodProductDetails{
+	details := ProductDetails{
 		Product:      product,
 		Versions:     versions,
 		UsedInDishes: usedInDishes,
 	}
 
-	h.Render(w, r, "food-product-details", details)
+	h.Render(w, r, "product-details", details)
 }
 
-type FoodProductDetails struct {
+type ProductDetails struct {
 	Product      nutrition.Product
 	Versions     []nutrition.Product
 	UsedInDishes []nutrition.Dish

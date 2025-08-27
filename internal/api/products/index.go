@@ -1,4 +1,4 @@
-package foodproducts
+package products
 
 import (
 	"net/http"
@@ -7,27 +7,27 @@ import (
 	"pyra/pkg/nutrition"
 )
 
-type FoodProductsHandler struct {
+type ProductsHandler struct {
 	*base.Handler
 	productRepo nutrition.ProductRepository
 }
 
-func (h *FoodProductsHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+func (h *ProductsHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	log := h.RequestLogger(r)
 
-	svc, err := nutrition.NewProductService(h.productRepo)
+	svc, err := nutrition.NewProductService(h.productRepo, nil)
 	if err != nil {
 		log.Error("failed to create ProductService", "error", err)
 		h.InternalServerError(w)
 		return
 	}
 
-	foodProducts, err := svc.List(r.Context())
+	products, err := svc.List(r.Context())
 	if err != nil {
 		log.Error("failed to list produces", "error", err)
 		h.InternalServerError(w)
 		return
 	}
 
-	h.Render(w, r, "food-product-list", foodProducts)
+	h.Render(w, r, "product-list", products)
 }

@@ -1,4 +1,4 @@
-package foodproducts
+package products
 
 import (
 	"errors"
@@ -15,15 +15,16 @@ var (
 	errNotPositive = errors.New("must be greater than 0")
 )
 
-func productID(r *http.Request) (nutrition.ProductID, error) {
-	paramID := r.PathValue("id")
+func productRef(r *http.Request) (nutrition.ProductUID, nutrition.ProductVersion, error) {
+	paramUID := r.PathValue("uid")
+	paramVersion := r.PathValue("version")
 
-	parsedID, err := strconv.ParseUint(paramID, 10, 64)
+	parsedVersion, err := strconv.ParseUint(paramVersion, 10, 64)
 	if err != nil {
-		return nutrition.ProductID(0), err
+		return nutrition.ProductUID(""), nutrition.ProductVersion(0), err
 	}
 
-	return nutrition.ProductID(parsedID), nil
+	return nutrition.ProductUID(paramUID), nutrition.ProductVersion(parsedVersion), nil
 }
 
 type ProductForm struct {

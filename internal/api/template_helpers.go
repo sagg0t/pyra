@@ -16,9 +16,9 @@ var TemplateHelpers = template.FuncMap{
 	"toJSON":         toJSON,
 	"inputData":      inputData,
 
-	// Food products URI helpers
-	"editFoodProductURI": routes.EditFoodProduct,
-	"foodProductURI":     routes.FoodProduct,
+	// Products URI helpers
+	"editProductURI": routes.EditProduct,
+	"productURI":     routes.Product,
 
 	// Dishes URI helpers
 	"dishURI": routes.DishURI,

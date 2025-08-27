@@ -1,4 +1,5 @@
-package foodproducts
+// Package products
+package products
 
 import (
 	"context"
@@ -26,6 +27,16 @@ func (r *Repository) FindByID(
 	id nutrition.ProductID,
 ) (nutrition.Product, error) {
 	row := r.db.QueryRowContext(ctx, findByIDQuery, id)
+
+	return r.scanProductRow(row)
+}
+
+func (r *Repository) FindByRef(
+	ctx context.Context,
+	uid nutrition.ProductUID,
+	version nutrition.ProductVersion,
+) (nutrition.Product, error) {
+	row := r.db.QueryRowContext(ctx, findByRefQuery, uid, version)
 
 	return r.scanProductRow(row)
 }
@@ -60,7 +71,25 @@ func (r *Repository) IsNameTaken(
 	ctx context.Context,
 	name nutrition.ProductName,
 ) (bool, error) {
-	panic("not implemented")
+	row := r.db.QueryRowContext(ctx, nameTakenQuery, name)
+	if err := row.Err(); err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return false, nil
+		}
+
+		return false, err
+	}
+
+	var one int
+	if err := row.Scan(&one); err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return false, nil
+		}
+
+		return false, err
+	}
+
+	return true, nil
 }
 
 func (r *Repository) ForDish(
@@ -93,7 +122,7 @@ func (r *Repository) Create(
 	macro nutrition.Macro,
 ) (nutrition.Product, error) {
 	row := r.db.QueryRowContext(ctx, createProductQuery,
-		name, macro.Calories, macro.Proteins, macro.Fats, macro.Carbs)
+		uid, name, macro.Calories, macro.Proteins, macro.Fats, macro.Carbs)
 
 	product := nutrition.Product{
 		UID:   uid,
@@ -113,7 +142,20 @@ func (r *Repository) CreateVersion(
 	name nutrition.ProductName,
 	macro nutrition.Macro,
 ) (nutrition.Product, error) {
-	panic("not implemented")
+	row := r.db.QueryRowContext(ctx, createProductVersionQuery,
+		uid, name, macro.Calories, macro.Proteins, macro.Fats, macro.Carbs)
+
+	product := nutrition.Product{
+		UID:   uid,
+		Name:  name,
+		Macro: macro,
+	}
+
+	if err := row.Scan(&product.ID, &product.Version, &product.CreatedAt); err != nil {
+		return nutrition.Product{}, err
+	}
+
+	return product, nil
 }
 
 func (r *Repository) Delete(ctx context.Context, id nutrition.ProductID) error {
@@ -134,8 +176,8 @@ func (r *Repository) Update(
 	}
 
 	result, err := tx.ExecContext(ctx, updateProductQuery,
-		id, name, macro.Calories, macro.Proteins,
-		macro.Fats, macro.Carbs)
+		id, name,
+		macro.Calories, macro.Proteins, macro.Fats, macro.Carbs)
 	if err != nil {
 		if err := tx.Rollback(); err != nil {
 			slog.ErrorContext(ctx, "error while rolling back a TX", "error", err)
@@ -172,6 +214,20 @@ func (r *Repository) Search(
 	defer rows.Close()
 
 	return r.scanProducts(rows)
+}
+
+func (r *Repository) MaxVersion(
+	ctx context.Context,
+	uid nutrition.ProductUID,
+) (nutrition.ProductVersion, error) {
+	row := r.db.QueryRowContext(ctx, maxProductVersionQuery, uid)
+
+	var version nutrition.ProductVersion
+	if err := row.Scan(&version); err != nil {
+		return nutrition.ProductVersion(-1), err
+	}
+
+	return version, nil
 }
 
 func (r *Repository) scanProducts(rows *sql.Rows) ([]nutrition.Product, error) {

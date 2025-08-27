@@ -1,4 +1,4 @@
-package foodproducts
+package products
 
 import (
 	"encoding/json"
@@ -8,12 +8,12 @@ import (
 	"pyra/pkg/nutrition"
 )
 
-type SearchFoodProductsHandler struct {
+type SearchProductsHandler struct {
 	*base.Handler
 	productRepo nutrition.ProductRepository
 }
 
-func (h *SearchFoodProductsHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+func (h *SearchProductsHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	log := h.RequestLogger(r)
 	searchQuery := r.URL.Query().Get("q")
 
@@ -40,7 +40,7 @@ func (h *SearchFoodProductsHandler) ServeHTTP(w http.ResponseWriter, r *http.Req
 	}
 }
 
-func (h *SearchFoodProductsHandler) buildSearchResults(products []nutrition.Product) []searchResult {
+func (h *SearchProductsHandler) buildSearchResults(products []nutrition.Product) []searchResult {
 	searchResults := make([]searchResult, len(products))
 	for idx, product := range products {
 		searchResults[idx] = searchResult{

@@ -1,11 +1,11 @@
-package foodproducts
+package products
 
 import (
 	"net/http"
 
 	"pyra/internal/api/base"
 	"pyra/internal/dishes"
-	"pyra/internal/foodproducts"
+	products "pyra/internal/products"
 	"pyra/pkg/nutrition"
 )
 
@@ -16,7 +16,7 @@ type API struct {
 }
 
 func NewAPI(api *base.API) *API {
-	repo := foodproducts.NewRepository(api.DB)
+	repo := products.NewRepository(api.DB)
 	dishRepo := dishes.NewRepository(api.DB)
 
 	return &API{
@@ -28,12 +28,12 @@ func NewAPI(api *base.API) *API {
 
 func (api *API) Index() http.Handler {
 	baseHandler := api.NewHandler()
-	err := baseHandler.ExpandTemplate("view/foodproducts/index.html")
+	err := baseHandler.ExpandTemplate("view/products/index.html")
 	if err != nil {
 		panic(err)
 	}
 
-	return &FoodProductsHandler{
+	return &ProductsHandler{
 		Handler:     baseHandler,
 		productRepo: api.productRepo,
 	}
@@ -41,12 +41,12 @@ func (api *API) Index() http.Handler {
 
 func (api *API) Show() http.Handler {
 	baseHandler := api.NewHandler()
-	err := baseHandler.ExpandTemplate("view/foodproducts/show.html")
+	err := baseHandler.ExpandTemplate("view/products/show.html")
 	if err != nil {
 		panic(err)
 	}
 
-	return &FoodProductHandler{
+	return &ProductHandler{
 		Handler:     baseHandler,
 		productRepo: api.productRepo,
 		dishRepo:    api.dishRepo,
@@ -55,24 +55,24 @@ func (api *API) Show() http.Handler {
 
 func (api *API) New() http.Handler {
 	baseHandler := api.NewHandler()
-	err := baseHandler.ExpandTemplate("view/foodproducts/new.html")
+	err := baseHandler.ExpandTemplate("view/products/new.html")
 	if err != nil {
 		panic(err)
 	}
 
-	return &NewFoodProductHandler{
+	return &NewProductHandler{
 		Handler: baseHandler,
 	}
 }
 
 func (api *API) Edit() http.Handler {
 	baseHandler := api.NewHandler()
-	err := baseHandler.ExpandTemplate("view/foodproducts/edit.html")
+	err := baseHandler.ExpandTemplate("view/products/edit.html")
 	if err != nil {
 		panic(err)
 	}
 
-	return &EditFoodProductHandler{
+	return &EditProductHandler{
 		Handler:     baseHandler,
 		productRepo: api.productRepo,
 	}
@@ -80,12 +80,12 @@ func (api *API) Edit() http.Handler {
 
 func (api *API) Create() http.Handler {
 	baseHandler := api.NewHandler()
-	err := baseHandler.ExpandTemplate("view/foodproducts/new.html")
+	err := baseHandler.ExpandTemplate("view/products/new.html")
 	if err != nil {
 		panic(err)
 	}
 
-	return &CreateFoodProductHandler{
+	return &CreateProductHandler{
 		Handler:     baseHandler,
 		productRepo: api.productRepo,
 	}
@@ -93,26 +93,27 @@ func (api *API) Create() http.Handler {
 
 func (api *API) Update() http.Handler {
 	baseHandler := api.NewHandler()
-	err := baseHandler.ExpandTemplate("view/foodproducts/edit.html")
+	err := baseHandler.ExpandTemplate("view/products/edit.html")
 	if err != nil {
 		panic(err)
 	}
 
-	return &UpdateFoodProductHandler{
+	return &UpdateProductHandler{
 		Handler:     baseHandler,
 		productRepo: api.productRepo,
+		dishRepo: api.dishRepo,
 	}
 }
 
 func (api *API) Delete() http.Handler {
-	return &DeleteFoodProductHandler{
+	return &DeleteProductHandler{
 		Handler:     api.NewHandler(),
 		productRepo: api.productRepo,
 	}
 }
 
 func (api *API) Search() http.Handler {
-	return &SearchFoodProductsHandler{
+	return &SearchProductsHandler{
 		Handler:     api.NewHandler(),
 		productRepo: api.productRepo,
 	}

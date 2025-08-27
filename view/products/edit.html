@@ -1,19 +1,19 @@
-{{ define "new-food-product" }}
+{{ define "edit-product" }}
 {{ template "layout" . }}
 {{ end }}
 
 {{ define "content" }}
 <header id="main-header">
     <div class="flex justify-between w-full">
-        <h1>Add a Product</h1>
-        <a href="/foodProducts" class="link-primary">
+        <h1>Edit: {{ .Name }}</h1>
+        <a href="/products" class="link-primary">
             List
         </a>
     </div>
 </header>
 
 <section>
-	<form action="/foodProducts" method="POST">
+	<form action="{{ productURI .Product }}" method="PUT" hx-put="{{ productURI .Product }}">
 		<div class="flex flex-col items-start gap-4">
             {{ template "input" inputData
                 "Type" "text"
@@ -22,7 +22,7 @@
                 "Value" .Name
                 "ID" "name"
                 "Required" true
-                "Error" (.Errors.Name) }}
+                "Error" .Errors.Name }}
 
 			<div class="flex gap-2">
                 {{ template "input" inputData
@@ -45,7 +45,6 @@
                     "Required" true
                     "Error" .Errors.Per }}
 			</div>
-
 			<div class="macros flex gap-2">
                 {{ template "input" inputData
                     "Name" "proteins"
@@ -77,9 +76,8 @@
                     "Required" true
                     "Error" .Errors.Carbs }}
 			</div>
-
 			<button type="submit" class="btn-secondary">
-				Submit
+				Update
 			</button>
 		</div>
 	</form>

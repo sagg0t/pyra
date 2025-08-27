@@ -9,7 +9,7 @@
 
 @import "./navigation.css" layer(base);
 @import "./header.css" layer(base);
-@import "./food_products.css" layer(base);
+@import "./products.css" layer(base);
 
 /*
   The default border color has changed to `currentcolor` in Tailwind CSS v4,

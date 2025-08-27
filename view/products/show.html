@@ -1,4 +1,4 @@
-{{ define "food-product-details" }}
+{{ define "product-details" }}
 {{ template "layout" . }}
 {{ end }}
 
@@ -6,7 +6,7 @@
 <nav>
     <ul class="flex flex-row gap-1">
         <li>
-            <a href="/foodProducts" class="link-primary text-md">Products</a>
+            <a href="/products" class="link-primary text-md">Products</a>
         </li>
         <li>/</li>
         <li>{{ .Product.Name }}</li>
@@ -18,7 +18,11 @@
 
     <div class="flex justify-between w-full">
         <h1>{{ .Name }}</h1>
-        <a href="/foodProducts" class="link-primary">List</a>
+
+        <div class="flex gap-4">
+            <a href="{{ editProductURI . }}" class="link-primary">Edit</a>
+            <a href="/products" class="link-primary">List</a>
+        </div>
     </div>
     {{ end }}
 </header>
@@ -51,7 +55,7 @@
     {{ end }}
 </section>
 
-{{ if gt (len .Versions) 1 }}
+{{ with .Versions }}
 <section>
     <h3 class="section-header">Versions:</h3>
 
@@ -72,12 +76,12 @@
             {{ range . }}
             <tr>
                 <td>
-                    <a href="/foodProducts/{{ .ID }}" class="link-primary">
+                    <a href="{{ productURI . }}" class="link-primary">
                         {{ .Name }}
                     </a>
                 </td>
                 <td>
-                    {{ if eq .Version $.Product.Version }}
+                    {{ if eq .Version $.Product.Version}}
                         <span class="rounded bg-emerald-600 border
                         border-emerald-600 border-x-4">
                             current

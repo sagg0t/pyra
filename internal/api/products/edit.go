@@ -1,4 +1,4 @@
-package foodproducts
+package products
 
 import (
 	"database/sql"
@@ -8,26 +8,26 @@ import (
 	"pyra/pkg/nutrition"
 )
 
-type EditFoodProductHandler struct {
+type EditProductHandler struct {
 	*base.Handler
 	productRepo nutrition.ProductRepository
 }
 
-func (h *EditFoodProductHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+func (h *EditProductHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	log := h.RequestLogger(r)
 
-	id, err := productID(r)
+	uid, version, err := productRef(r)
 	if err != nil {
-		log.ErrorContext(ctx, "failed to extract ID from URI", "error", err)
+		log.ErrorContext(ctx, "malformed product UID or version", "error", err)
 		h.InternalServerError(w)
 		return
 	}
 
-	product, err := h.productRepo.FindByID(r.Context(), id)
+	product, err := h.productRepo.FindByRef(ctx, uid, version)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			log.WarnContext(ctx, "food product not found", "id", id)
+			log.WarnContext(ctx, "product not found", "uid", uid, "version", version)
 			h.NotFound(w, r)
 			return
 		}
@@ -42,5 +42,5 @@ func (h *EditFoodProductHandler) ServeHTTP(w http.ResponseWriter, r *http.Reques
 		Per:     100,
 	}
 
-	h.Render(w, r, "edit-food-product", form)
+	h.Render(w, r, "edit-product", form)
 }

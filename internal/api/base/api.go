@@ -33,3 +33,7 @@ func (api *API) NewHandler() *Handler {
 		userRepo: api.UserRepo,
 	}
 }
+
+func (api *API) AddTemplateFuncs(funcs template.FuncMap) {
+	api.drivers.Funcs(funcs)
+}

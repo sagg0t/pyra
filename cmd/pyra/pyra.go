@@ -14,6 +14,7 @@ import (
 	"pyra/pkg/db"
 	"pyra/pkg/log"
 	"pyra/pkg/server"
+	"pyra/pkg/session"
 )
 
 func main() {
@@ -45,7 +46,6 @@ func main() {
 		rootLogger.Error("failed to create a DB pool", "error", err)
 		os.Exit(1)
 	}
-	_ = dbPool
 
 	mux := api.Mux(dbPool, rootLogger)
 
@@ -54,6 +54,7 @@ func main() {
 
 	var h http.Handler = mux
 	h = server.PanicRecovery(h)
+	session.SetupSessionStore()
 	h = server.Session(h)
 	h = server.Logger(rootLogger, h)
 

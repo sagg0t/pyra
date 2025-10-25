@@ -24,34 +24,62 @@ type Logger struct {
 }
 
 func NewLogger() *Logger {
-	return &Logger{
-		slogger: slog.New(devslog.NewHandler(os.Stderr, &devslog.Options{
-			NewLineAfterLog: true,
-			HandlerOptions: &slog.HandlerOptions{
-				Level: slog.Level(LevelDebug),
-				ReplaceAttr: func(groups []string, a slog.Attr) slog.Attr {
-					if a.Key == slog.TimeKey {
-						return slog.Attr{Key: "ts", Value: a.Value}
+	var lvl Level
+
+	envLvl := os.Getenv("LOG_LEVEL")
+	if envLvl == "" {
+		lvl = LevelDebug
+	} else {
+		switch envLvl {
+		case "DEBUG":
+			lvl = LevelDebug
+		case "TRACE":
+			lvl = LevelTrace
+		case "INFO":
+			lvl = LevelInfo
+		case "WARN":
+			lvl = LevelWarn
+		case "ERROR":
+			lvl = LevelError
+		default:
+			panic("invalid log level: " + envLvl)
+		}
+	}
+
+	h := devslog.NewHandler(os.Stderr, &devslog.Options{
+		NewLineAfterLog: true,
+		HandlerOptions: &slog.HandlerOptions{
+			Level: slog.Level(lvl),
+			ReplaceAttr: func(groups []string, a slog.Attr) slog.Attr {
+				if a.Key == slog.TimeKey {
+					return slog.Attr{Key: "ts", Value: a.Value}
+				}
+
+				if a.Key == slog.LevelKey {
+					attr := slog.Attr{Key: slog.LevelKey}
+
+					level := a.Value.Any().(slog.Level)
+					switch {
+					case level == slog.Level(LevelTrace):
+						attr.Value = slog.StringValue("TRACE")
+					default:
+						attr.Value = slog.StringValue(level.String())
 					}
 
-					if a.Key == slog.LevelKey {
-						attr := slog.Attr{Key: "severity"}
+					return attr
+				}
 
-						level := a.Value.Any().(slog.Level)
-						switch {
-						case level == slog.Level(LevelTrace):
-							attr.Value = slog.StringValue("TRACE")
-						default:
-							attr.Value = slog.StringValue(level.String())
-						}
-
-						return attr
-					}
-
-					return a
-				},
+				return a
 			},
-		})),
+		},
+	})
+
+	return NewLoggerFromHandler(h)
+}
+
+func NewLoggerFromHandler(h slog.Handler) *Logger {
+	return &Logger{
+		slogger: slog.New(h),
 	}
 }
 

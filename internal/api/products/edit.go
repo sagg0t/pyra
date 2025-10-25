@@ -2,6 +2,7 @@ package products
 
 import (
 	"database/sql"
+	"errors"
 	"net/http"
 
 	"pyra/internal/api/base"
@@ -19,15 +20,15 @@ func (h *EditProductHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	uid, version, err := productRef(r)
 	if err != nil {
-		log.ErrorContext(ctx, "malformed product UID or version", "error", err)
-		h.InternalServerError(w)
+		log.DebugContext(ctx, "malformed product UID or version", "error", err, "path", r.URL.Path)
+		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 
 	product, err := h.productRepo.FindByRef(ctx, uid, version)
 	if err != nil {
-		if err == sql.ErrNoRows {
-			log.WarnContext(ctx, "product not found", "uid", uid, "version", version)
+		if errors.Is(err, sql.ErrNoRows) {
+			log.DebugContext(ctx, "product not found", "uid", uid, "version", version)
 			h.NotFound(w, r)
 			return
 		}
@@ -37,10 +38,7 @@ func (h *EditProductHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	form := ProductForm{
-		Product: product,
-		Per:     100,
-	}
+	form := FormFromProduct(product)
 
 	h.Render(w, r, "edit-product", form)
 }

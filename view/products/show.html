@@ -33,22 +33,22 @@
         <tbody>
             <tr>
                 <td>Calories</td>
-                <td>{{ compactFloat .Calories }}</td>
+                <td>{{ .Calories.String }}</td>
             </tr>
 
             <tr>
                 <td>Proteins</td>
-                <td>{{ compactFloat .Proteins }}</td>
+                <td>{{ .Proteins.String }}</td>
             </tr>
 
             <tr>
                 <td>Fats</td>
-                <td>{{ compactFloat .Fats }}</td>
+                <td>{{ .Fats.String }}</td>
             </tr>
 
             <tr>
                 <td>Carbs</td>
-                <td>{{ compactFloat .Carbs }}</td>
+                <td>{{ .Carbs.String }}</td>
             </tr>
         </tbody>
     </table>

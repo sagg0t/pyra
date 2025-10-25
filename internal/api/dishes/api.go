@@ -12,6 +12,7 @@ type API struct {
 	*base.API
 }
 
+// NewAPI - creates API instance for dishes-related endpoints.
 func NewAPI(api *base.API) *API {
 	return &API{
 		API: api,
@@ -26,8 +27,8 @@ func (api *API) Index() http.Handler {
 	}
 
 	return &ListDishesHandler{
-		Handler: baseHandler,
-		svc:     dishes.NewRepository(api.DB),
+		Handler:  baseHandler,
+		dishRepo: dishes.NewRepository(api.DB),
 	}
 }
 

@@ -5,13 +5,22 @@ import (
 	"fmt"
 )
 
-var ErrMacroNegative = errors.New("value of macronutrient can't be negative")
+var ErrNegative = errors.New("must be >= 0")
 
 type Macro struct {
-	Calories float32
-	Proteins float32
-	Fats     float32
-	Carbs    float32
+	Calories Measurement `fake:"{number:0,1000000}"`
+	Proteins Measurement `fake:"{number:0,100000}"`
+	Fats     Measurement `fake:"{number:0,100000}"`
+	Carbs    Measurement `fake:"{number:0,100000}"`
+}
+
+func (m Macro) Add(other Macro) Macro {
+	m.Calories += other.Calories
+	m.Proteins += other.Proteins
+	m.Fats += other.Fats
+	m.Carbs += other.Carbs
+
+	return m	
 }
 
 type MacroErrors struct {
@@ -41,38 +50,35 @@ func (e *MacroErrors) Error() string {
 	).Error()
 }
 
-func NewMacro(calories, proteins, fats, carbs float32) (Macro, MacroErrors) {
+func (m Macro) Validate() MacroErrors {
 	mErrors := MacroErrors{}
 
-	if calories < 0 {
-		mErrors.Calories = ErrMacroNegative
+	if m.Calories < 0 {
+		mErrors.Calories = ErrNegative
 	}
 
-	if proteins < 0 {
-		mErrors.Proteins = ErrMacroNegative
+	if m.Proteins < 0 {
+		mErrors.Proteins = ErrNegative
 	}
 
-	if fats < 0 {
-		mErrors.Fats = ErrMacroNegative
+	if m.Fats < 0 {
+		mErrors.Fats = ErrNegative
 	}
 
-	if carbs < 0 {
-		mErrors.Carbs = ErrMacroNegative
+	if m.Carbs < 0 {
+		mErrors.Carbs = ErrNegative
 	}
 
-	return Macro{
-		Calories: calories,
-		Proteins: proteins,
-		Fats:     fats,
-		Carbs:    carbs,
-	}, mErrors
+	return mErrors
 }
 
-func (m *Macro) Normalize(per float32) {
-	ratio := per / 100.0
+// Normalize - scales macronutrient values from "portion" to 100.
+// Records are stored in a normalized form N/100 g.
+func (m *Macro) Normalize(portion float64) {
+	ratio := 100.0 / portion
 
-	m.Calories *= ratio
-	m.Proteins *= ratio
-	m.Fats *= ratio
-	m.Carbs *= ratio
+	m.Calories = m.Calories.Scale(ratio)
+	m.Proteins = m.Proteins.Scale(ratio)
+	m.Fats = m.Fats.Scale(ratio)
+	m.Carbs = m.Carbs.Scale(ratio)
 }

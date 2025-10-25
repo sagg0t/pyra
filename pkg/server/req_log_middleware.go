@@ -2,6 +2,8 @@ package server
 
 import (
 	"net/http"
+	"slices"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -31,8 +33,8 @@ func Logger(logger *log.Logger, f http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		startT := time.Now()
 
-		traceId := uuid.New()
-		l := logger.With("traceId", traceId.String())
+		traceID := uuid.New()
+		l := logger.With("traceId", traceID.String())
 
 		ctx := r.Context()
 		ctxWithLog := log.CtxWithLogger(ctx, l)
@@ -49,6 +51,15 @@ func Logger(logger *log.Logger, f http.Handler) http.Handler {
 			level = log.LevelInfo
 		} else {
 			level = log.LevelError
+		}
+
+		filteredPaths := []string{
+			"/apple-touch-icon.png",
+			"/apple-touch-icon-precomposed.png",
+			"/favicon.ico",
+		}
+		if slices.Contains(filteredPaths, r.URL.Path) || strings.HasPrefix(r.URL.Path, "/assets/") {
+			return
 		}
 
 		l.Log(ctx, level, "",

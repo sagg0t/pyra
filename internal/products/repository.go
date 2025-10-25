@@ -6,9 +6,10 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	"log/slog"
+	"time"
 
 	"pyra/pkg/db"
+	"pyra/pkg/log"
 	"pyra/pkg/nutrition"
 )
 
@@ -22,12 +23,20 @@ func NewRepository(db db.DBTX) nutrition.ProductRepository {
 	}
 }
 
+func (r *Repository) BeginTx(ctx context.Context) (db.DBTX, error) {
+	return r.db.BeginTx(ctx, nil)
+}
+
+func (r *Repository) WithTx(tx db.DBTX) nutrition.ProductRepository {
+	return NewRepository(tx)
+}
+
 func (r *Repository) FindByID(
 	ctx context.Context,
 	id nutrition.ProductID,
 ) (nutrition.Product, error) {
 	row := r.db.QueryRowContext(ctx, findByIDQuery, id)
-
+	
 	return r.scanProductRow(row)
 }
 
@@ -49,7 +58,7 @@ func (r *Repository) Versions(
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer closeRows(ctx, rows)
 
 	return r.scanProducts(rows)
 }
@@ -62,7 +71,7 @@ func (r *Repository) FindAllByIDs(
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer closeRows(ctx, rows)
 
 	return r.scanProducts(rows)
 }
@@ -100,7 +109,7 @@ func (r *Repository) ForDish(
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer closeRows(ctx, rows)
 
 	return r.scanProducts(rows)
 }
@@ -110,52 +119,23 @@ func (r *Repository) Index(ctx context.Context) ([]nutrition.Product, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer closeRows(ctx, rows)
 
 	return r.scanProducts(rows)
 }
 
-func (r *Repository) Create(
-	ctx context.Context,
-	uid nutrition.ProductUID,
-	name nutrition.ProductName,
-	macro nutrition.Macro,
-) (nutrition.Product, error) {
+func (r *Repository) Create(ctx context.Context, p *nutrition.Product) error {
 	row := r.db.QueryRowContext(ctx, createProductQuery,
-		uid, name, macro.Calories, macro.Proteins, macro.Fats, macro.Carbs)
+		p.UID, p.Name, p.Calories, p.Proteins, p.Fats, p.Carbs)
 
-	product := nutrition.Product{
-		UID:   uid,
-		Name:  name,
-		Macro: macro,
-	}
-	if err := row.Scan(&product.ID, &product.Version); err != nil {
-		return nutrition.Product{}, err
-	}
-
-	return product, nil
+	return row.Scan(&p.ID, &p.Version)
 }
 
-func (r *Repository) CreateVersion(
-	ctx context.Context,
-	uid nutrition.ProductUID,
-	name nutrition.ProductName,
-	macro nutrition.Macro,
-) (nutrition.Product, error) {
+func (r *Repository) CreateVersion(ctx context.Context, p *nutrition.Product) error {
 	row := r.db.QueryRowContext(ctx, createProductVersionQuery,
-		uid, name, macro.Calories, macro.Proteins, macro.Fats, macro.Carbs)
+		p.UID, p.Name, p.Calories, p.Proteins, p.Fats, p.Carbs)
 
-	product := nutrition.Product{
-		UID:   uid,
-		Name:  name,
-		Macro: macro,
-	}
-
-	if err := row.Scan(&product.ID, &product.Version, &product.CreatedAt); err != nil {
-		return nutrition.Product{}, err
-	}
-
-	return product, nil
+	return row.Scan(&p.ID, &p.Version, &p.CreatedAt)
 }
 
 func (r *Repository) Delete(ctx context.Context, id nutrition.ProductID) error {
@@ -164,54 +144,51 @@ func (r *Repository) Delete(ctx context.Context, id nutrition.ProductID) error {
 	return err
 }
 
-func (r *Repository) Update(
-	ctx context.Context,
-	id nutrition.ProductID,
-	name nutrition.ProductName,
-	macro nutrition.Macro,
-) error {
-	tx, err := r.db.BeginTx(ctx, nil)
+func (r *Repository) Update(ctx context.Context, product *nutrition.Product) error {
+	result, err := r.db.ExecContext(ctx, updateProductQuery,
+		product.UID, product.Version, product.Name,
+		product.Calories, product.Proteins, product.Fats, product.Carbs)
 	if err != nil {
-		return err
-	}
-
-	result, err := tx.ExecContext(ctx, updateProductQuery,
-		id, name,
-		macro.Calories, macro.Proteins, macro.Fats, macro.Carbs)
-	if err != nil {
-		if err := tx.Rollback(); err != nil {
-			slog.ErrorContext(ctx, "error while rolling back a TX", "error", err)
-		}
-
 		return err
 	}
 
 	rowsAffected, err := result.RowsAffected()
 	if err != nil {
-		if err := tx.Rollback(); err != nil {
-			slog.ErrorContext(ctx, "error while rolling back a TX", "error", err)
-		}
 		return err
-	}
-	if rowsAffected != 1 {
-		if err := tx.Rollback(); err != nil {
-			slog.ErrorContext(ctx, "error while rolling back a TX", "error", err)
-		}
+	} else if rowsAffected != 1 {
 		return fmt.Errorf("expected 1 row to be affected, got %d", rowsAffected)
 	}
 
-	return tx.Commit()
+	return nil
 }
 
-func (r *Repository) Search(
-	ctx context.Context,
-	searchStr string,
-) ([]nutrition.Product, error) {
+func (r *Repository) Archive(ctx context.Context, id nutrition.ProductID, ts time.Time) error {
+	result, err := r.db.ExecContext(ctx, "UPDATE products SET archived_at = $2 WHERE id = $1", id, ts)
+	if err != nil {
+		return err
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return err
+	}
+	if rowsAffected != 1 {
+		return fmt.Errorf("expected 1 row to be affected, got %d", rowsAffected)
+	}
+
+	return nil
+}
+
+func (r *Repository) Search(ctx context.Context, searchStr string) ([]nutrition.Product, error) {
 	rows, err := r.db.QueryContext(ctx, searchProductsQuery, searchStr)
-	if err != nil && !errors.Is(err, sql.ErrNoRows) {
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, nil
+		}
+
 		return nil, err
 	}
-	defer rows.Close()
+	defer closeRows(ctx, rows)
 
 	return r.scanProducts(rows)
 }
@@ -230,8 +207,29 @@ func (r *Repository) MaxVersion(
 	return version, nil
 }
 
+func (r *Repository) UsedInDishes(ctx context.Context, id nutrition.ProductID) (bool, error) {
+	row := r.db.QueryRowContext(ctx, usedInDishesQuery, id, nutrition.IngredientProduct)
+
+	var one int
+	err := row.Scan(&one)	
+
+	if errors.Is(err, sql.ErrNoRows) {
+		err = nil
+	}
+
+	return one == 1, err
+}
+
+func (r *Repository) CountAll(ctx context.Context) (n int, err error) {
+	row := r.db.QueryRowContext(ctx, "SELECT COUNT(*) FROM products;")
+	err = row.Scan(&n)
+
+	return
+}
+
 func (r *Repository) scanProducts(rows *sql.Rows) ([]nutrition.Product, error) {
 	products := make([]nutrition.Product, 0)
+
 	for rows.Next() {
 		product, err := r.scanProductRows(rows)
 		if err != nil {
@@ -247,43 +245,25 @@ func (r *Repository) scanProducts(rows *sql.Rows) ([]nutrition.Product, error) {
 func (r *Repository) scanProductRows(rows *sql.Rows) (nutrition.Product, error) {
 	product := nutrition.Product{}
 
-	err := rows.Scan(
-		&product.ID,
-		&product.UID,
-		&product.Version,
-		&product.Name,
-		&product.Calories,
-		&product.Proteins,
-		&product.Fats,
-		&product.Carbs,
-		&product.CreatedAt,
-		&product.UpdatedAt,
-	)
-	if err != nil {
-		return nutrition.Product{}, err
-	}
+	err := rows.Scan(&product.ID, &product.UID, &product.Version, &product.Name,
+		&product.Calories, &product.Proteins, &product.Fats, &product.Carbs,
+		&product.CreatedAt, &product.UpdatedAt)
 
-	return product, nil
+	return product, err
 }
 
 func (r *Repository) scanProductRow(row *sql.Row) (nutrition.Product, error) {
 	product := nutrition.Product{}
 
-	err := row.Scan(
-		&product.ID,
-		&product.UID,
-		&product.Version,
-		&product.Name,
-		&product.Calories,
-		&product.Proteins,
-		&product.Fats,
-		&product.Carbs,
-		&product.CreatedAt,
-		&product.UpdatedAt,
-	)
-	if err != nil {
-		return nutrition.Product{}, err
-	}
+	err := row.Scan(&product.ID, &product.UID, &product.Version, &product.Name,
+		&product.Calories, &product.Proteins, &product.Fats, &product.Carbs,
+		&product.CreatedAt, &product.UpdatedAt)
 
-	return product, nil
+	return product, err
+}
+
+func closeRows(ctx context.Context, rows *sql.Rows) {
+	if closeErr := rows.Close(); closeErr != nil {
+		log.FromContext(ctx).WarnContext(ctx, "failed to close TX", "error", closeErr)
+	}
 }

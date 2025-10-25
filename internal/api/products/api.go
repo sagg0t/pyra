@@ -5,14 +5,14 @@ import (
 
 	"pyra/internal/api/base"
 	"pyra/internal/dishes"
-	products "pyra/internal/products"
+	"pyra/internal/products"
 	"pyra/pkg/nutrition"
 )
 
 type API struct {
 	*base.API
-	productRepo nutrition.ProductRepository
-	dishRepo    nutrition.DishRepository
+	ProductRepo nutrition.ProductRepository
+	DishRepo    nutrition.DishRepository
 }
 
 func NewAPI(api *base.API) *API {
@@ -21,8 +21,8 @@ func NewAPI(api *base.API) *API {
 
 	return &API{
 		API:         api,
-		productRepo: repo,
-		dishRepo:    dishRepo,
+		ProductRepo: repo,
+		DishRepo:    dishRepo,
 	}
 }
 
@@ -35,7 +35,7 @@ func (api *API) Index() http.Handler {
 
 	return &ProductsHandler{
 		Handler:     baseHandler,
-		productRepo: api.productRepo,
+		ProductRepo: api.ProductRepo,
 	}
 }
 
@@ -48,8 +48,8 @@ func (api *API) Show() http.Handler {
 
 	return &ProductHandler{
 		Handler:     baseHandler,
-		productRepo: api.productRepo,
-		dishRepo:    api.dishRepo,
+		productRepo: api.ProductRepo,
+		dishRepo:    api.DishRepo,
 	}
 }
 
@@ -74,7 +74,7 @@ func (api *API) Edit() http.Handler {
 
 	return &EditProductHandler{
 		Handler:     baseHandler,
-		productRepo: api.productRepo,
+		productRepo: api.ProductRepo,
 	}
 }
 
@@ -87,7 +87,7 @@ func (api *API) Create() http.Handler {
 
 	return &CreateProductHandler{
 		Handler:     baseHandler,
-		productRepo: api.productRepo,
+		productRepo: api.ProductRepo,
 	}
 }
 
@@ -100,21 +100,21 @@ func (api *API) Update() http.Handler {
 
 	return &UpdateProductHandler{
 		Handler:     baseHandler,
-		productRepo: api.productRepo,
-		dishRepo: api.dishRepo,
+		ProductRepo: api.ProductRepo,
+		DishRepo:    api.DishRepo,
 	}
 }
 
 func (api *API) Delete() http.Handler {
 	return &DeleteProductHandler{
 		Handler:     api.NewHandler(),
-		productRepo: api.productRepo,
+		ProductRepo: api.ProductRepo,
 	}
 }
 
 func (api *API) Search() http.Handler {
 	return &SearchProductsHandler{
 		Handler:     api.NewHandler(),
-		productRepo: api.productRepo,
+		productRepo: api.ProductRepo,
 	}
 }

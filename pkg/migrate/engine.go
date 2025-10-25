@@ -208,6 +208,10 @@ func (eng *Engine) Rollback(count uint64) (rolledBack []Migration, outErr error)
 		return nil, err
 	}
 
+	if len(appliedVersions) == 0 {
+		return nil, fmt.Errorf("nothing to rollback")
+	}
+
 	if count == 0 {
 		count = uint64(len(appliedVersions))
 	}

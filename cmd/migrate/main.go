@@ -8,11 +8,17 @@ import (
 	"strconv"
 
 	"pyra/pkg/migrate"
+
+	"github.com/joho/godotenv"
 )
 
 func main() {
 	// slog.SetLogLoggerLevel(slog.LevelDebug)
 
+	// FIX: load depending on env
+	if err := godotenv.Load("/Users/sagg0t/devel/pyra/.env.test"); err != nil {
+		panic(err)
+	}
 	config := migrate.NewConfig()
 
 	dbConfig := migrate.NewDBConfig("pgx")

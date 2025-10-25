@@ -11,15 +11,15 @@ import (
 const SessionCookieName = "pyra-session"
 
 type ctxKey string
-
 const sessionCtxKey ctxKey = "session"
 
-var (
-	key   = os.Getenv("SESSION_SECRET")
-	store = sessions.NewCookieStore([]byte(key))
-)
+var key string
+var store *sessions.CookieStore
 
-func init() {
+func SetupSessionStore() {
+	key = os.Getenv("SESSION_SECRET")
+	store = sessions.NewCookieStore([]byte(key))
+
 	// store.Options.SameSite = http.SameSiteStrictMode
 	store.MaxAge(3600 * 24)
 	store.Options.HttpOnly = true

@@ -2,7 +2,6 @@
 package api
 
 import (
-	"html/template"
 	"net/http"
 
 	"pyra/internal/api/base"
@@ -14,7 +13,10 @@ import (
 
 func Mux(db db.DBTX, l *log.Logger) *http.ServeMux {
 	mux := http.NewServeMux()
-	drivers := baseTemplate()
+	drivers := base.Drivers()
+
+	drivers.Funcs(products.URIHelpers)
+	drivers.Funcs(dishes.URIHelpers)
 
 	baseAPI := base.NewAPI(db, drivers)
 	// authAPI := auth.NewAPI(baseAPI)
@@ -53,16 +55,4 @@ func Mux(db db.DBTX, l *log.Logger) *http.ServeMux {
 	// mux.Handle("POST /dishes", base.Authenticated(dishesAPI.Create()))
 
 	return mux
-}
-
-func baseTemplate() *template.Template {
-	templateDriver := template.New("drivers")
-
-	templateDriver.Funcs(TemplateHelpers)
-
-	template.Must(templateDriver.ParseGlob("view/layout/*.html"))
-	template.Must(templateDriver.ParseGlob("view/errors/*.html"))
-	template.Must(templateDriver.ParseGlob("view/components/*.html"))
-
-	return templateDriver
 }

@@ -5,7 +5,6 @@ import (
 
 	"pyra/internal/api/base"
 	"pyra/pkg/auth"
-	"pyra/pkg/users"
 )
 
 type API struct {
@@ -17,7 +16,7 @@ func NewAPI(api *base.API) *API {
 	svc := auth.NewService(
 		api.DB,
 		auth.NewProviderRepository(api.DB),
-		users.NewRepository(api.DB),
+		auth.NewUserRepository(api.DB),
 	)
 
 	return &API{

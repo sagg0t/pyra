@@ -43,17 +43,18 @@ func (h *Handler) InternalServerError(w http.ResponseWriter) {
 }
 
 func (h *Handler) NotFound(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotFound)
 	h.template.ExecuteTemplate(w, "not-found-error", nil)
 }
 
 func (h *Handler) CurrentUser(r *http.Request) (*auth.User, error) {
 	s := h.Session(r)
-	userId, ok := s.Values[UserIDSessionKey]
+	userID, ok := s.Values[UserIDSessionKey]
 	if !ok {
 		return nil, ErrNoUsesr
 	}
 
-	user, err := h.userRepo.FindByID(r.Context(), userId.(uint64))
+	user, err := h.userRepo.FindByID(r.Context(), userID.(uint64))
 	if err != nil {
 		return nil, err
 	}

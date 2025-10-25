@@ -5,152 +5,120 @@ import (
 	"database/sql"
 
 	"pyra/pkg/db"
+	"pyra/pkg/log"
 	"pyra/pkg/nutrition"
 )
-
-func NewRepository(db db.DBTX) *Repository {
-	return &Repository{
-		db: db,
-	}
-}
 
 type Repository struct {
 	db db.DBTX
 }
 
-const listDishesQuery = `SELECT
-	dishes.*
-	FROM dishes
-	INNER JOIN ( SELECT DISTINCT
-			uid,
-			max(version) AS version
-		FROM
-			dishes
-		GROUP BY
-			uid) latest_dishes ON dishes.uid = latest_dishes.uid
-	AND dishes.version = latest_dishes.version`
-
-func (repo *Repository) Index(ctx context.Context) ([]nutrition.Dish, error) {
-	rows, err := repo.db.QueryContext(ctx, listDishesQuery)
-	if err != nil {
-		return nil, err
+func NewRepository(db db.DBTX) nutrition.DishRepository {
+	return &Repository{
+		db: db,
 	}
-
-	dishes, err := repo.scanAllRows(rows)
-	if err != nil {
-		return nil, err
-	}
-
-	return dishes, nil
 }
 
-func (repo *Repository) FindByID(ctx context.Context, id nutrition.DishID) (nutrition.Dish, error) {
-	row := repo.db.QueryRowContext(ctx, "SELECT * FROM dishes WHERE id = $1 LIMIT 1", id)
-
-	dish, err := repo.scanRow(row)
-	if err != nil {
-		return nutrition.Dish{}, err
-	}
-
-	return dish, nil
+func (r *Repository) BeginTx(ctx context.Context) (db.DBTX, error) {
+	return r.db.BeginTx(ctx, nil)
 }
 
-func (repo *Repository) Versions(ctx context.Context, uid nutrition.DishUID) ([]nutrition.Dish, error) {
-	rows, err := repo.db.QueryContext(ctx, "SELECT * FROM dishes WHERE uid = $1 ORDER BY version DESC LIMIT 20", uid)
-	if err != nil {
-		return nil, err
-	}
-
-	dishes, err := repo.scanAllRows(rows)
-	if err != nil {
-		return nil, err
-	}
-
-	return dishes, nil
+func (r *Repository) WithTx(tx db.DBTX) nutrition.DishRepository {
+	return NewRepository(tx)
 }
 
-const dishesByProductQuery = `SELECT dishes.*
-		FROM dishes
-		INNER JOIN dish_products ON dish_products.dish_id = dishes.id
-		WHERE dish_products.food_product_id = $1;`
-
-func (repo *Repository) FindAllByProductID(ctx context.Context, productID nutrition.ProductID) ([]nutrition.Dish, error) {
-	rows, err := repo.db.QueryContext(ctx, dishesByProductQuery, productID)
+func (r *Repository) Index(ctx context.Context) ([]nutrition.Dish, error) {
+	rows, err := r.db.QueryContext(ctx, listDishesQuery)
 	if err != nil {
 		return nil, err
 	}
 
-	dishes, err := repo.scanAllRows(rows)
+	return r.scanAllRows(rows)
+}
+
+func (r *Repository) FindByID(ctx context.Context, id nutrition.DishID) (nutrition.Dish, error) {
+	row := r.db.QueryRowContext(ctx, dishByIDQuery, id)
+
+	return r.scanRow(row)
+}
+
+func (r *Repository) Versions(ctx context.Context, uid nutrition.DishUID) ([]nutrition.Dish, error) {
+	rows, err := r.db.QueryContext(ctx, dishVersionsQuery, uid)
 	if err != nil {
 		return nil, err
 	}
+	defer func() {
+		if closeErr := rows.Close(); closeErr != nil {
+			log.FromContext(ctx).WarnContext(ctx, "failed to close TX", "error", closeErr)
+		}
+	}()
 
-	return dishes, nil
+	return r.scanAllRows(rows)
+}
+
+func (r *Repository) FindAllByProductID(ctx context.Context, productID nutrition.ProductID) ([]nutrition.Dish, error) {
+	rows, err := r.db.QueryContext(ctx, dishesByProductQuery, productID)
+	if err != nil {
+		return nil, err
+	}
+	defer func() {
+		if closeErr := rows.Close(); closeErr != nil {
+			log.FromContext(ctx).WarnContext(ctx, "failed to close rows", "error", closeErr)
+		}
+	}()
+
+	return r.scanAllRows(rows)
+}
+
+func (r *Repository) FindAllByRefs(ctx context.Context, refs []nutrition.DishRef) ([]nutrition.Dish, error) {
+	panic("not implemented")
+}
+
+func (r *Repository) IsNameTaken(ctx context.Context, name nutrition.DishName, uid nutrition.DishUID) (bool, error) {
+	row := r.db.QueryRowContext(ctx, isDishNameTakenQuery, name, uid)
+
+	var result bool
+	err := row.Scan(&result)
+
+	return result, err
+}
+
+func (r *Repository) Create(ctx context.Context, dish *nutrition.Dish) error {
+	row := r.db.QueryRowContext(ctx, createDishQuery,
+		dish.UID, dish.Version, dish.Name,
+		dish.Calories, dish.Proteins, dish.Fats, dish.Carbs)
+
+	return row.Scan(&dish.ID, &dish.CreatedAt, &dish.UpdatedAt)
 }
 
 func (r *Repository) scanRow(row *sql.Row) (nutrition.Dish, error) {
 	dish := nutrition.Dish{}
 
-	err := row.Scan(
-		&dish.ID,
-		&dish.UID,
-		&dish.Version,
-		&dish.Name,
-		&dish.Calories,
-		&dish.Proteins,
-		&dish.Fats,
-		&dish.Carbs,
-		&dish.CreatedAt,
-		&dish.UpdatedAt,
-	)
-	if err != nil {
-		return nutrition.Dish{}, err
-	}
+	err := row.Scan(&dish.ID, &dish.UID, &dish.Version, &dish.Name,
+		&dish.Calories, &dish.Proteins, &dish.Fats, &dish.Carbs,
+		&dish.CreatedAt, &dish.UpdatedAt)
 
-	return dish, nil
+	return dish, err
 }
 
 func (r *Repository) scanRows(rows *sql.Rows) (nutrition.Dish, error) {
 	dish := nutrition.Dish{}
 
-	err := rows.Scan(
-		&dish.ID,
-		&dish.UID,
-		&dish.Version,
-		&dish.Name,
-		&dish.Calories,
-		&dish.Proteins,
-		&dish.Fats,
-		&dish.Carbs,
-		&dish.CreatedAt,
-		&dish.UpdatedAt,
-	)
-	if err != nil {
-		return nutrition.Dish{}, err
-	}
+	err := rows.Scan(&dish.ID, &dish.UID, &dish.Version, &dish.Name,
+		&dish.Calories, &dish.Proteins, &dish.Fats, &dish.Carbs,
+		&dish.CreatedAt, &dish.UpdatedAt)
 
-	return dish, nil
+	return dish, err
 }
 
 func (r *Repository) scanAllRows(rows *sql.Rows) ([]nutrition.Dish, error) {
 	dishes := make([]nutrition.Dish, 0)
 
 	for rows.Next() {
-		dish := nutrition.Dish{}
-
-		err := rows.Scan(
-			&dish.ID,
-			&dish.UID,
-			&dish.Version,
-			&dish.Name,
-			&dish.Calories,
-			&dish.Proteins,
-			&dish.Fats,
-			&dish.Carbs,
-			&dish.CreatedAt,
-			&dish.UpdatedAt,
-		)
+		dish, err := r.scanRows(rows)
 		if err != nil {
+			// TODO: instead of stopping and returning an error,
+			// 		mark the item as errored and still return the list
 			return nil, err
 		}
 

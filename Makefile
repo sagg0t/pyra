@@ -70,3 +70,11 @@ dev:
 .PHONY: scratch
 scratch:
 	@go run ./cmd/scratch
+
+.PHONY: psql
+psql:
+	@psql-18 -h localhost -p 5432 -d pyra_dev -U pyra
+
+.PHONY: psql-test
+psql-test:
+	@psql-18 -h localhost -p 5433 -d pyra_test -U pyra

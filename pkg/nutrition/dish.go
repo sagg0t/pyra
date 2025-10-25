@@ -26,7 +26,9 @@ type DishErrors struct {
 
 	Name error
 
-	MacroErrors
+	Macro MacroErrors
+
+	Ingredients []IngredientErrors
 }
 
 func (e *DishErrors) HasErrors() bool {
@@ -35,18 +37,20 @@ func (e *DishErrors) HasErrors() bool {
 	versionErr := e.Version != nil
 	nameErr := e.Version != nil
 
-	return idErr || uidErr || versionErr || nameErr || e.MacroErrors.HasErrors()
+	return idErr || uidErr || versionErr || nameErr || e.Macro.HasErrors()
 }
 
+const dishErrFormat = `
+ID: %w
+UID: %w
+Version: %w
+Name: %w
+%s`
+
 func (e *DishErrors) Error() string {
-	return fmt.Errorf(
-		`ID: %w
-		UID: %w
-		Version: %w
-		Name: %w
-		%s`,
+	return fmt.Errorf(dishErrFormat,
 		e.ID, e.UID, e.Version, e.Name,
-		e.MacroErrors.Error(),
+		e.Macro.Error(),
 	).Error()
 }
 
@@ -64,7 +68,7 @@ func NewDishUID(s string) (DishUID, error) {
 func NewDishName(n string) (DishName, error) {
 	n = strings.TrimSpace(n)
 	if len(n) == 0 {
-		return DishName(""), ErrNameEmpty
+		return DishName(""), ErrBlank
 	}
 
 	return DishName(n), nil

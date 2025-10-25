@@ -1,23 +1,45 @@
 package nutrition
 
 import (
-	"errors"
 	"fmt"
-	"strings"
 	"time"
 )
 
 type Product struct {
-	ID      ProductID
-	UID     ProductUID
-	Version ProductVersion
+	ProductRecord
 
-	Name ProductName
+	Errors ProductErrors
+}
+
+func (p *Product) HasErrors() bool {
+	return p.Errors.HasErrors()
+}
+
+func (p *Product) IsArchived() bool {
+	return !p.ArchivedAt.IsZero()
+}
+
+type ProductRecord struct {
+	ID      ProductID `fake:"-"`
+	UID     ProductUID `fake:"{uuid}"`
+	Version ProductVersion `fake:"1"`
+
+	Name ProductName `fake:"{productname}"`
 
 	Macro
 
-	CreatedAt time.Time
-	UpdatedAt time.Time
+	ArchivedAt time.Time `fake:"-"`
+
+	CreatedAt time.Time `fake:"-"`
+	UpdatedAt time.Time `fake:"-"`
+}
+
+func (p *ProductRecord) Format(f fmt.State, verb rune) {
+	f.Write([]byte("aasdlfkj"))
+}
+
+func (p *ProductRecord) String() string {
+	return ""
 }
 
 type (
@@ -58,13 +80,10 @@ func (e *ProductErrors) Error() string {
 	).Error()
 }
 
-var ErrNameEmpty = errors.New("name can't be empty")
-
-func NewProductName(n string) (ProductName, error) {
-	n = strings.TrimSpace(n)
-	if len(n) == 0 {
-		return ProductName(""), ErrNameEmpty
+func (name ProductName) Validate() error {
+	if len(name) == 0 {
+		return ErrBlank
 	}
 
-	return ProductName(n), nil
+	return nil
 }

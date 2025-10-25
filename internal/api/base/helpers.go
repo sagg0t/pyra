@@ -1,36 +1,15 @@
-package api
+package base
 
 import (
 	"encoding/json"
 	"errors"
 	"fmt"
 	"html/template"
-	"strconv"
-
-	"pyra/internal/api/routes"
 )
 
 var TemplateHelpers = template.FuncMap{
-	"compactFloat":   compactFloat[float32],
-	"compactFloat64": compactFloat[float64],
-	"toJSON":         toJSON,
-	"inputData":      inputData,
-
-	// Products URI helpers
-	"editProductURI": routes.EditProduct,
-	"productURI":     routes.Product,
-
-	// Dishes URI helpers
-	"dishURI": routes.DishURI,
-}
-
-func compactFloat[T float32 | float64](f T) string {
-	f64 := float64(f)
-	if f64-float64(int64(f64)) == 0 {
-		return strconv.FormatInt(int64(f64), 10)
-	}
-
-	return strconv.FormatFloat(f64, 'f', 2, 32)
+	"toJSON":    toJSON,
+	"inputData": inputData,
 }
 
 func toJSON(v any) string {

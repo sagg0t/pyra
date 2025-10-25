@@ -10,5 +10,5 @@ node_modules/
 /**/*_templ.go
 /**/*_templ.txt
 
-.env
+.env*
 !.env_example

@@ -12,37 +12,36 @@ var (
 
 type Ingredient struct {
 	DishID
-	ProductID
+
+	IngredientableID   uint64
+	IngredientableType IngredientableType
 
 	Amount float32
 	Unit   MeasurementUnit
+
+	Idx uint16
 }
 
-type MeasurementUnit int32
+type IngredientErrors struct {
+	DishID error
 
-const (
-	InvalidUnit MeasurementUnit = iota
-	Gramms
-	Milliliter
-	Unit
-)
+	IngredientableID   error
+	IngredientableType error
 
-func NewMeasurementUnit(iunit int32) MeasurementUnit {
-	switch iunit {
-	case 1:
-		return Gramms
-	case 2:
-		return Milliliter
-	case 3:
-		return Unit
-	default:
-		return InvalidUnit
-	}
+	Amount error
+	Unit   error
+
+	Idx error
 }
 
-func NewIngredient(dishID uint64, productID uint64, amt float32, unit int32) (Ingredient, error) {
-	mUnit := NewMeasurementUnit(unit)
-	if mUnit == InvalidUnit {
+func NewIngredient(
+	dishID DishID,
+	ingredientableID uint64,
+	ingredientableType IngredientableType,
+	amt float32,
+	unit MeasurementUnit,
+) (Ingredient, error) {
+	if unit == InvalidUnit {
 		return Ingredient{}, fmt.Errorf("%w: %v", ErrInvalidUnit, unit)
 	}
 
@@ -51,9 +50,60 @@ func NewIngredient(dishID uint64, productID uint64, amt float32, unit int32) (In
 	}
 
 	return Ingredient{
-		DishID:    DishID(dishID),
-		ProductID: ProductID(productID),
-		Amount:    amt,
-		Unit:      mUnit,
+		DishID:           dishID,
+		IngredientableID: ingredientableID,
+		Amount:           amt,
+		Unit:             unit,
 	}, nil
+}
+
+type IngredientableType uint16
+
+const (
+	IngredientNone IngredientableType = iota
+	IngredientProduct
+	IngredientDish
+)
+
+func (it IngredientableType) String() string {
+	switch it {
+	case IngredientNone:
+		return "IngredientNone"
+	case IngredientProduct:
+		return "IngredientProduct"
+	case IngredientDish:
+		return "IngredientDish"
+	default:
+		panic("WTF?")
+	}
+}
+
+type Ingredientable struct {
+	ID   uint64
+
+	Macro
+
+	Info IngredientInfo
+}
+
+const ingredientableDebugFormat = `
+	ID: %d
+	Calories: %.2f
+	Proteins: %.2f
+	Fats: %.2f
+	Carbs: %.2f
+	Info:
+		Idx: %d
+		UID: %s
+		Version: %d
+		Type: %s
+		Amount: %.2f
+		Unit: %s
+
+`
+func (ing Ingredientable) String() string {
+	return fmt.Sprintf(ingredientableDebugFormat, ing.ID,
+		ing.Calories.Float(), ing.Proteins.Float(), ing.Fats.Float(), ing.Carbs.Float(),
+		ing.Info.Idx, ing.Info.UID, ing.Info.Version, ing.Info.Type,
+		ing.Info.Amount, ing.Info.Unit)
 }

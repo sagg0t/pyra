@@ -8,6 +8,7 @@ import (
 	"github.com/sethvargo/go-envconfig"
 )
 
+// Config - database connection config.
 // Available params https://www.postgresql.org/docs/15/libpq-connect.html#LIBPQ-PARAMKEYWORDS
 //
 // Defaults:
@@ -23,7 +24,7 @@ type Config struct {
 	Scheme   string `env:"DB_SCHEME,default=postgresql"`
 	User     string `env:"DB_USER,default=pyra"`
 	Password string `env:"DB_PASSWORD,default=pyra"`
-	DbName   string `env:"DB_NAME,default=pyra_dev"`
+	DBName   string `env:"DB_NAME,default=pyra_dev"`
 	Host     string `env:"DB_HOST,default=0.0.0.0"`
 	Port     uint   `env:"DB_PORT,default=5432"`
 
@@ -35,11 +36,16 @@ func (c Config) String() string {
 		Scheme:   c.Scheme,
 		User:     url.UserPassword(c.User, c.Password),
 		Host:     fmt.Sprintf("%s:%d", c.Host, c.Port),
-		Path:     c.DbName,
+		Path:     c.DBName,
 		RawQuery: c.Attrs.Encode(),
 	}
 
-	return u.String()
+	out := u.String()
+	if c.DBName == "" {
+		out += "/"
+	}
+
+	return out
 }
 
 func NewConfig(adapter string) Config {

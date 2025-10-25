@@ -3,101 +3,133 @@ package nutrition
 import (
 	"context"
 	"errors"
+	"time"
+
+	"pyra/pkg/db"
+
+	"github.com/google/uuid"
 )
 
-var ErrAlreadyExists = errors.New("Product already exists")
+var (
+	ErrProductNameTaken = errors.New("product with such name already exists")
+	ErrProductInvalid   = errors.New("product validation failed")
+	ErrNotLatest        = errors.New("can only update the latest version")
+	ErrProductUsed      = errors.New("cannot modify product that has been used")
+	ErrArchived         = errors.New("cannot modify archived product")
+)
 
-type ProductService struct {
-	repo     ProductRepository
-	dishRepo DishRepository
+func ListProducts(ctx context.Context, repo ProductRepository) ([]Product, error) {
+	return repo.Index(ctx)
 }
 
-func NewProductService(repo ProductRepository) (*ProductService, error) {
-	return &ProductService{
-		repo: repo,
-	}, nil
+func FindProductByID(ctx context.Context, repo ProductRepository, id ProductID) (Product, error) {
+	return repo.FindByID(ctx, id)
 }
 
-func (s *ProductService) List(ctx context.Context) ([]Product, error) {
-	return s.repo.Index(ctx)
-}
-
-func (s *ProductService) FindByID(ctx context.Context, id ProductID) (Product, error) {
-	return s.repo.FindByID(ctx, id)
-}
-
-type CreateProductInfo struct {
-	UID  ProductUID
-	Name ProductName
-	Macro
-}
-
-func (s *ProductService) Create(
-	ctx context.Context,
-	info CreateProductInfo,
-) (Product, error) {
-	isTaken, err := s.repo.IsNameTaken(ctx, info.Name)
+func CreateProduct(ctx context.Context, repo ProductRepository, product *Product) (err error) {
+	tx, err := repo.BeginTx(ctx)
 	if err != nil {
-		return Product{}, err
+		return err
+	}
+	defer db.RollbackGuard(ctx, tx, &err)
+
+	repo = repo.WithTx(tx)
+
+	product.UID = ProductUID(uuid.New().String())
+
+	isTaken, err := repo.IsNameTaken(ctx, product.Name)
+	if err != nil {
+		return err
 	} else if isTaken {
-		return Product{}, ErrAlreadyExists
+		product.Errors.Name = ErrProductNameTaken
+		return ErrProductInvalid
 	}
 
-	product, err := s.repo.Create(
-		ctx,
-		info.UID,
-		info.Name,
-		info.Macro,
-	)
+	err = repo.Create(ctx, product)
 	if err != nil {
-		return Product{}, err
+		return err
 	}
 
-	return product, nil
+	return tx.Commit()
 }
 
-type UpdateProductInfo struct {
-	ID   ProductID
-	Name ProductName
-	Macro
-}
-
-func (s *ProductService) Update(
-	ctx context.Context,
-	info UpdateProductInfo,
-) (Product, error) {
-	product, err := s.repo.FindByID(ctx, info.ID)
+func UpdateProduct(ctx context.Context, repo ProductRepository, product *Product) (err error) {
+	tx, err := repo.BeginTx(ctx)
 	if err != nil {
-		return Product{}, err
+		return err
+	}
+	defer db.RollbackGuard(ctx, tx, &err)
+
+	repo = repo.WithTx(tx)
+
+	currentState, err := repo.FindByRef(ctx, product.UID, product.Version)
+	if err != nil {
+		return err
 	}
 
-	// TODO: add TX here
-	dishes, err := s.dishRepo.FindAllByProductID(ctx, info.ID)
-	if err != nil {
-		return Product{}, err
+	if currentState.IsArchived() {
+		return ErrArchived
 	}
 
-	if len(dishes) == 0 {
-		product, err := s.repo.CreateVersion(
-			ctx,
-			product.UID,
-			info.Name,
-			info.Macro,
-		)
+	// FIX: actually being used in dishes is not a problem. Only if that dish has been
+	// used in the menu - then it becomes untouchable.
+	usedInDishes, err := repo.UsedInDishes(ctx, currentState.ID)
+	if err != nil {
+		return err
+	}
+
+	if usedInDishes {
+		archivedAt := time.Now().UTC()
+		err := repo.Archive(ctx, product.ID, archivedAt)
 		if err != nil {
-			return Product{}, err
+			return err
 		}
 
-		return product, nil
+		err = repo.CreateVersion(ctx, product)
+		if err != nil {
+			return err
+		}
 	} else {
-		err := s.repo.Update(ctx, info.ID, info.Name, info.Macro)
+		err := repo.Update(ctx, product)
 		if err != nil {
-			return Product{}, err
+			return err
 		}
-
-		product.Name = info.Name
-		product.Macro = info.Macro
-
-		return product, nil
 	}
+
+	return tx.Commit()
+}
+
+func DeleteProduct(
+	ctx context.Context,
+	repo ProductRepository,
+	uid ProductUID,
+	version ProductVersion,
+) error {
+	tx, err := repo.BeginTx(ctx)
+	if err != nil {
+		return err
+	}
+	defer db.RollbackGuard(ctx, tx, &err)
+
+	repo = repo.WithTx(tx)
+
+	product, err := repo.FindByRef(ctx, uid, version)
+	if err != nil {
+		return err
+	}
+
+	if product.IsArchived() {
+		return ErrArchived
+	}
+
+	usedInDishes, err := repo.UsedInDishes(ctx, product.ID)
+	if err != nil {
+		return err
+	}
+
+	if usedInDishes {
+		return ErrProductUsed
+	}
+
+	return tx.Commit()
 }

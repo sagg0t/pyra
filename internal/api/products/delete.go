@@ -11,7 +11,7 @@ import (
 
 type DeleteProductHandler struct {
 	*base.Handler
-	productRepo nutrition.ProductRepository
+	ProductRepo nutrition.ProductRepository
 }
 
 func (h *DeleteProductHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -24,19 +24,19 @@ func (h *DeleteProductHandler) ServeHTTP(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	product, err := h.productRepo.FindByRef(ctx, uid, version)
+	product, err := h.ProductRepo.FindByRef(ctx, uid, version)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			http.NotFound(w, r)
 			return
 		}
 
-		log.ErrorContext(ctx, "failed to delete product", "error", err)
+		log.ErrorContext(ctx, "failed to find product", "error", err)
 		h.InternalServerError(w)
 		return
 	}
 
-	err = h.productRepo.Delete(ctx, product.ID)
+	err = h.ProductRepo.Delete(ctx, product.ID)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			http.NotFound(w, r)

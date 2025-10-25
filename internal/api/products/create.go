@@ -1,6 +1,7 @@
 package products
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 
@@ -13,7 +14,6 @@ type CreateProductHandler struct {
 	productRepo nutrition.ProductRepository
 }
 
-// POST /products
 func (h *CreateProductHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	log := h.RequestLogger(r)
@@ -27,6 +27,8 @@ func (h *CreateProductHandler) ServeHTTP(w http.ResponseWriter, r *http.Request)
 	}
 
 	form := NewProductForm(r.FormValue)
+	product := form.BuildProduct()
+
 	if form.HasErrors() {
 		log.DebugContext(ctx, "create product validation error", "error", form.Errors)
 		w.WriteHeader(http.StatusUnprocessableEntity)
@@ -34,23 +36,16 @@ func (h *CreateProductHandler) ServeHTTP(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	svc, err := nutrition.NewProductService(h.productRepo, nil)
-	if err != nil {
-		log.ErrorContext(ctx, "failed to create ProductService", "error", err)
+	err = nutrition.CreateProduct(ctx, h.productRepo, &product)
+	if err != nil && !errors.Is(err, nutrition.ErrProductInvalid) {
+		log.DebugContext(ctx, "failed to save product", "error", err)
 		h.InternalServerError(w)
 		return
 	}
 
-	createInfo := nutrition.CreateProductInfo{
-		Name:  form.Name,
-		Macro: form.NormalizedProduct().Macro,
-	}
-
-	product, err := svc.Create(ctx, createInfo)
-	if err != nil {
-		log.DebugContext(ctx, "failed to save product", "error", err)
-		session.AddFlash(fmt.Sprintf("failed to create a product: %s", err.Error()))
-
+	if product.HasErrors() {
+		form.SetProductErrors(product.Errors)
+		session.AddFlash("failed to create a product")
 		w.WriteHeader(http.StatusUnprocessableEntity)
 		h.Render(w, r, "new-product", form)
 		return
